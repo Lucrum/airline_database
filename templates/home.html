@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Homepage</title>
+</head>
+<body>
+
+<h1>Welcome {{username}}</h1>
+<form action="/add_airline" method="POST">
+    <input type="text" name="airlines" placeholder="Add new airline" required></br>
+    <input type="submit" value = Post />
+</form>
+
+<style type="text/css">
+    table, th, td {
+        border: 1px solid black;
+    }
+</style>
+
+<table>
+    <th>Airline Name</th>
+
+    {% for line in posts %}
+        <tr>
+            <td>{{line.airline_name}}</td>
+        </tr>
+    {% endfor %}
+</table>
+
+<a href="/logout">Logout</a>
+
+</body>
+</html>
