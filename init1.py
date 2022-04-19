@@ -33,6 +33,10 @@ def stafflogin():
 def customerregister():
 	return render_template('customerregister.html')
 
+@app.route('/staffregister')
+def staffregister():
+	return render_template('staffregister.html')
+
 #Authenticates the login
 @app.route('/sloginAuth', methods=['GET', 'POST'])
 def sloginAuth():
