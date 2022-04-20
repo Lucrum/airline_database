@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/html">
+<head>
+    <meta charset="UTF-8">
+    <title>Landing Page</title>
+    <style>
+    table, th, td {
+        border: 1px solid black;
+    }
+    * {
+        margin: 10px;
+    }
+    </style>
+</head>
+<body>
+<h1>Welcome, guest!</h1>
+<p>You are not logged in, and may only view public data.
+<a href="/login" style="margin:0px;">Login here.</a></p>
+
+<form action="/psearch" method="POST" style="margin:0px">
+    <input type="text" name="psearchf" placeholder="Search flights"/>
+    <input type="submit" value="Search"/>
+    {% if err %}
+        <p style="color:red">Please enter something to search for!</p>
+    {% else %}
+    {% endif %}
+</form>
+
+<table style="text-align:left">
+    {% if flights %}
+        <th style>Airline</th>
+        <th>Flight Number</th>
+        <th>Departure Date</th>
+        <th>Arrival Date</th>
+        {% for elem in flights %}
+            <tr>
+                {% for data in elem %}
+                    <td> {{ data }} </td>
+                {% endfor %}
+            </tr>
+        {% endfor %}
+    {% else %}
+        <p>There are currently no flights to display</p>
+    {% endif %}
+</table>
+
+
+
+</body>
+</html>

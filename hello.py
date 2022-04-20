@@ -15,6 +15,38 @@ app.secret_key = "secret"
 
 @app.route('/')
 def landing():
+    filtered_data = getPublicData()
+    if filtered_data:
+        no_search = False
+    else:
+        no_search = True
+
+    return render_template('landing_page.html', flights=filtered_data, err=no_search)
+
+@app.route('/psearch', methods=['POST'])
+def psearch():
+    cursor = conn.cursor()
+    search_tags = request.form['psearchf']
+    if search_tags:
+        query = 'SELECT * FROM flight WHERE airline_name = %s OR departure_airport_code = %s OR arrival_airport_code = %s ' \
+                'OR departure_date_time = %s OR arrival_date_time = %s'
+        cursor.execute(query, (search_tags, search_tags, search_tags, search_tags, search_tags))
+        data = cursor.fetchall()
+
+
+        filtered_data = []
+        for elem in data:
+            filtered_data.append([elem['airline_name'], elem['flight_number'],
+                                  elem['departure_date_time'][0:10], elem['arrival_date_time'][0:10]])
+
+
+        cursor.close()
+        return render_template('psearch.html', field=search_tags, data=filtered_data)
+    else:
+        filtered_data = getPublicData()
+        return render_template('landing_page.html', flights=filtered_data, err = True)
+
+def getPublicData():
     cursor = conn.cursor()
     query = 'SELECT * FROM flight'
 
@@ -23,14 +55,13 @@ def landing():
     data = cursor.fetchall()
 
     cursor.close()
-
     filtered_data = []
+    if (data):
+        for elem in data:
+            filtered_data.append([elem['airline_name'], elem['flight_number'],
+                                  elem['departure_date_time'][0:10], elem['arrival_date_time'][0:10]])
+    return filtered_data
 
-    for elem in data:
-        filtered_data.append([elem['airline_name'], elem['flight_number'],
-                              elem['departure_date_time'][0:10], elem['arrival_date_time'][0:10]])
-
-    return render_template('landing_page.html', flights=filtered_data)
 
 @app.route('/home')
 def home():
