@@ -82,53 +82,129 @@ def logout():
     session.pop('username')
     return redirect('/')
 
-@app.route('/loginAuth', methods=['GET','POST'])
-def loginAuth():
+@app.route('/customerlogin')
+def customerlogin():
+    return render_template('customerlogin.html')
+
+@app.route('/stafflogin')
+def stafflogin():
+    return render_template('stafflogin.html')
+
+#Define route for register
+@app.route('/customerregister')
+def customerregister():
+    return render_template('customerregister.html')
+
+@app.route('/staffregister')
+def staffregister():
+    return render_template('staffregister.html')
+
+#Authenticates the login
+@app.route('/sloginAuth', methods=['GET', 'POST'])
+def sloginAuth():
+    #grabs information from the forms
     username = request.form['username']
     password = request.form['password']
 
+    #cursor used to send queries
     cursor = conn.cursor()
-    query = 'SELECT * FROM airline_staff WHERE username = %s and s_password = %s'
+    #executes query
+    query = 'SELECT * FROM user WHERE username = %s and password = %s'
     cursor.execute(query, (username, password))
-
+    #stores the results in a variable
     data = cursor.fetchone()
-
+    #use fetchall() if you are expecting more than 1 data row
     cursor.close()
+    error = None
     if(data):
+        #creates a session for the the user
+        #session is a built in
         session['username'] = username
         return redirect(url_for('home'))
     else:
-        error = "Invalid username or password"
-        return render_template('login.html', error=error)
+        #returns an error message to the html page
+        error = 'Invalid login or username'
+        return render_template('stafflogin.html', error=error)
 
-@app.route('/register')
-def register():
-    return render_template('register.html')
-
-@app.route('/registerAuth', methods=['GET','POST'])
-def registerAuth():
+@app.route('/cloginAuth', methods=['GET', 'POST'])
+def cloginAuth():
+    #grabs information from the forms
     username = request.form['username']
     password = request.form['password']
 
+    #cursor used to send queries
     cursor = conn.cursor()
-
-    query = 'SELECT * FROM airline_staff WHERE username = %s'
-    cursor.execute(query, (username))
-
+    #executes query
+    query = 'SELECT * FROM user WHERE username = %s and password = %s'
+    cursor.execute(query, (username, password))
+    #stores the results in a variable
     data = cursor.fetchone()
-
+    #use fetchall() if you are expecting more than 1 data row
+    cursor.close()
+    error = None
     if(data):
-        error = "This user already exists"
-        cursor.close()
-        return render_template('register.html', error=error)
+        #creates a session for the the user
+        #session is a built in
+        session['username'] = username
+        return redirect(url_for('home'))
     else:
-        ins = 'INSERT INTO airline_staff VALUES (%s, %s, %s, %s, %s, %s)'
-        cursor.execute(ins, (username, password))
+        #returns an error message to the html page
+        error = 'Invalid login or username'
+        return render_template('customerlogin.html', error=error)
 
+
+#Authenticates the register
+@app.route('/cregisterAuth', methods=['GET', 'POST'])
+def cregisterAuth():
+    #grabs information from the forms
+    username = request.form['username']
+    password = request.form['password']
+
+    #cursor used to send queries
+    cursor = conn.cursor()
+    #executes query
+    query = 'SELECT * FROM user WHERE username = %s'
+    cursor.execute(query, (username))
+    #stores the results in a variable
+    data = cursor.fetchone()
+    #use fetchall() if you are expecting more than 1 data row
+    error = None
+    if(data):
+        #If the previous query returns data, then user exists
+        error = "This user already exists"
+        return render_template('customerregister.html', error = error)
+    else:
+        ins = 'INSERT INTO user VALUES(%s, %s)'
+        cursor.execute(ins, (username, password))
         conn.commit()
         cursor.close()
-        succeed = "Success!"
-        return render_template('index.html', success=succeed)
+        return render_template('index.html')
+
+@app.route('/sregisterAuth', methods=['GET', 'POST'])
+def sregisterAuth():
+    #grabs information from the forms
+    username = request.form['username']
+    password = request.form['password']
+
+    #cursor used to send queries
+    cursor = conn.cursor()
+    #executes query
+    query = 'SELECT * FROM user WHERE username = %s'
+    cursor.execute(query, (username))
+    #stores the results in a variable
+    data = cursor.fetchone()
+    #use fetchall() if you are expecting more than 1 data row
+    error = None
+    if(data):
+        #If the previous query returns data, then user exists
+        error = "This user already exists"
+        return render_template('staffregister.html', error = error)
+    else:
+        ins = 'INSERT INTO user VALUES(%s, %s)'
+        cursor.execute(ins, (username, password))
+        conn.commit()
+        cursor.close()
+        return render_template('index.html')
 
 @app.route('/add_airline', methods=['GET','POST'])
 def add_airline():
