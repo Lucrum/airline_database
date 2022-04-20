@@ -3,12 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <title>Login</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles/login.css') }}">
 </head>
 <body>
 <form action ="/loginAuth" method="POST">
     <input type="text" name="username" placeholder="Username" required/> </br>
     <input type="password" name="password" placeholder="Password" required/> </br>
-    <input type="submit" value=Login />
+    <input type="submit" value=Login /> </br>
+    <a href="/register">Register here</a>
     {% if error %}
         <p class="error"><strong>Error:</strong> {{error}}</p>
     {% endif %}
@@ -17,5 +19,8 @@
     {% endif %}
 
 </form>
+
+
+
 </body>
 </html>

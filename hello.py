@@ -15,7 +15,22 @@ app.secret_key = "secret"
 
 @app.route('/')
 def landing():
-    return render_template('login.html')
+    cursor = conn.cursor()
+    query = 'SELECT * FROM flight'
+
+    cursor.execute(query)
+
+    data = cursor.fetchall()
+
+    cursor.close()
+
+    filtered_data = []
+
+    for elem in data:
+        filtered_data.append([elem['airline_name'], elem['flight_number'],
+                              elem['departure_date_time'][0:10], elem['arrival_date_time'][0:10]])
+
+    return render_template('landing_page.html', flights=filtered_data)
 
 @app.route('/home')
 def home():
@@ -76,7 +91,7 @@ def registerAuth():
         cursor.close()
         return render_template('register.html', error=error)
     else:
-        ins = 'INSERT INTO airline_staff VALUES (%s, %s)'
+        ins = 'INSERT INTO airline_staff VALUES (%s, %s, %s, %s, %s, %s)'
         cursor.execute(ins, (username, password))
 
         conn.commit()
