@@ -13,10 +13,16 @@
     </style>
 </head>
 <body>
-<h1>Welcome, guest!</h1>
-<p>You are not logged in, and may only view public data.
-<a href="/login" style="margin:0px;">Login here.</a></p>
 
+<div>
+    <h1 style="float:left">Welcome, guest!</h1>
+    <p style="float:right">You are not logged in and may only view public data.</p><br>
+    <a href="/cloginAuth" style="float:right">Customer login</a>
+    <a href="/cregisterAuth" style="float:right">Customer registration</a>
+    <a href="/sloginAuth" style="float:right">Staff login</a>
+    <a href="/sregisterAuth" style="float:right">Staff registration</a>
+</div>
+<br>
 <form action="/psearch" method="POST" style="margin:0px">
     <input type="text" name="psearchf" placeholder="Search flights"/>
     <input type="submit" value="Search"/>
