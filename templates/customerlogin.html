@@ -3,13 +3,16 @@
 </head>
 <body>
 <form action="/loginAuth" method="POST">
-	<input type="text" name = "username" placeholder="username" required/> </br>
-	<input type="password" name = "password" placeholder="password" required/></br>
-	<input type="submit" value = Login />
+	<input type="text" name = "cusername" placeholder="Username" required/> </br>
+	<input type="password" name = "cpassword" placeholder="Password" required/></br>
+	<input type="submit" value ="Login" />
 	{% if error %}
 		<p class="error"><strong>Error:</strong> {{error}}</p>
 	{% endif %}
 </form>
+
+<a href="{{ url_for('registerRedirect', acc_type='customer') }}">Register</a><br>
+<a href="{{ url_for('loginRedirect', acc_type='staff') }}">Staff login</a><br>
 
 <a href="/">Go back</a>
 

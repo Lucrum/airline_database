@@ -21,7 +21,23 @@ def landing():
     else:
         no_search = True
 
+
+
     return render_template('landing_page.html', flights=filtered_data, err=no_search)
+
+@app.route('/loginRedirect', methods = ['GET', 'POST'])
+def formRedirect():
+    acc = request.form.get('accDropdown')
+    print(acc)
+
+    if (acc == "customer"):
+        return render_template('customerlogin.html')
+    elif (acc == "staff"):
+        return render_template('stafflogin.html')
+    else:
+        return render_template('landing_page.html')
+
+
 
 @app.route('/psearch', methods=['POST'])
 def psearch():
@@ -73,31 +89,29 @@ def home():
     cursor.close()
     return render_template('home.html', username=username, posts=data)
 
-@app.route('/login')
-def login():
-    return render_template('login.html')
-
 @app.route('/logout')
 def logout():
     session.pop('username')
     return redirect('/')
 
-@app.route('/customerlogin')
-def customerlogin():
-    return render_template('customerlogin.html')
+@app.route('/loginRedirect/<acc_type>')
+def loginRedirect(acc_type):
 
-@app.route('/stafflogin')
-def stafflogin():
-    return render_template('stafflogin.html')
+    if (acc_type == "customer"):
+        return(render_template('customerlogin.html'))
+    elif(acc_type == "staff"):
+        return (render_template('stafflogin.html'))
+    else:
+        redirect(url_for('landing'))
 
-#Define route for register
-@app.route('/customerregister')
-def customerregister():
-    return render_template('customerregister.html')
-
-@app.route('/staffregister')
-def staffregister():
-    return render_template('staffregister.html')
+@app.route('/registerRedirect/<acc_type>')
+def registerRedirect(acc_type):
+    if (acc_type == "customer"):
+        return(render_template('customerregister.html'))
+    elif(acc_type == "staff"):
+        return (render_template('staffregister.html'))
+    else:
+        redirect(url_for('landing'))
 
 #Authenticates the login
 @app.route('/sloginAuth', methods=['GET', 'POST'])

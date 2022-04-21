@@ -3,13 +3,17 @@
 </head>
 <body>
 <form action="/cregisterAuth" method="POST">
-	<input type="text" name = "username" placeholder="username" required/> </br>
-	<input type="password" name = "password" placeholder="password" required/></br>
+	<input type="text" name = "username" placeholder="Username" required/> </br>
+	<input type="password" name = "password" placeholder="Password" required/></br>
 	<input type="submit" value = Register />
 	{% if error %}
 		<p class="error"><strong>Error:</strong> {{error}}</p>
 	{% endif %}
 </form>
+
+<a href="{{ url_for('loginRedirect', acc_type='customer') }}">Login</a><br>
+<a href="{{ url_for('registerRedirect', acc_type='staff') }}">Staff registration</a><br>
+
 <a href="/">Go back</a>
 </body>
 </html>

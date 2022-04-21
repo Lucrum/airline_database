@@ -16,14 +16,18 @@
 
 <div>
     <h1 style="float:left">Welcome, guest!</h1>
-    <p style="float:right">You are not logged in and may only view public data.</p><br>
-    <a href="/cloginAuth" style="float:right">Customer login</a>
-    <a href="/cregisterAuth" style="float:right">Customer registration</a>
-    <a href="/sloginAuth" style="float:right">Staff login</a>
-    <a href="/sregisterAuth" style="float:right">Staff registration</a>
+    <p style="float:right; margin:0px">You are not logged in and may only view public data.</p><br>
+
+
+    <div style="float:right">
+        <a href="{{ url_for('loginRedirect', acc_type='customer') }}">Login here</a><br>
+        <a href="{{ url_for('registerRedirect', acc_type='customer') }}">Register here</a>
+    </div>
+
+
 </div>
-<br>
-<form action="/psearch" method="POST" style="margin:0px">
+<br><br>
+<form action="/psearch" method="post" style="margin:0px">
     <input type="text" name="psearchf" placeholder="Search flights"/>
     <input type="submit" value="Search"/>
     {% if err %}
