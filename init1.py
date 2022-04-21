@@ -95,14 +95,26 @@ def cloginAuth():
 @app.route('/cregisterAuth', methods=['GET', 'POST'])
 def cregisterAuth():
 	#grabs information from the forms
-	username = request.form['username']
+	email = request.form['email']
+	fname = request.form['fname']
+	lname = request.form['lname']
 	password = request.form['password']
+	state = request.form['state']
+	city = request.form['city']
+	street = request.form['street']
+	building = request.form['building']
+	phone = request.form['phone']
+	passnum = request.form['passnum']
+	passexpi = request.form['passexpi']
+	passcountry = request.form['passcountry']
+	dob = request.form['dob']
+
 
 	#cursor used to send queries
 	cursor = conn.cursor()
 	#executes query
 	query = 'SELECT * FROM customer WHERE email = %s'
-	cursor.execute(query, (username))
+	cursor.execute(query, (email))
 	#stores the results in a variable
 	data = cursor.fetchone()
 	#use fetchall() if you are expecting more than 1 data row
@@ -112,8 +124,9 @@ def cregisterAuth():
 		error = "This user already exists"
 		return render_template('customerregister.html', error = error)
 	else:
-		ins = 'INSERT INTO user VALUES(%s, %s)'
-		cursor.execute(ins, (username, password))
+		ins = 'INSERT INTO customer VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
+		cursor.execute(ins, (email, fname, lname, password, state, city, street, building, phone, passnum,
+							 passexpi,passcountry, dob))
 		conn.commit()
 		cursor.close()
 		return render_template('index.html')
@@ -142,7 +155,7 @@ def sregisterAuth():
 		error = "This user already exists"
 		return render_template('staffregister.html', error = error)
 	else:
-		ins = 'INSERT INTO airline_staff VALUES(%s, %s, %s, %s, %s)'
+		ins = 'INSERT INTO airline_staff VALUES(%s, %s, %s, %s, %s, %s)'
 		cursor.execute(ins, (username, password, airline_name, fname, lname, dob))
 		conn.commit()
 		cursor.close()
