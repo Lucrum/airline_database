@@ -123,6 +123,10 @@ def sregisterAuth():
 	#grabs information from the forms
 	username = request.form['username']
 	password = request.form['password']
+	airline_name = request.form['airline_name']
+	fname = request.form['fname']
+	lname = request.form['lname']
+	dob = request.form['dob']
 
 	#cursor used to send queries
 	cursor = conn.cursor()
@@ -138,8 +142,8 @@ def sregisterAuth():
 		error = "This user already exists"
 		return render_template('staffregister.html', error = error)
 	else:
-		ins = 'INSERT INTO user VALUES(%s, %s)'
-		cursor.execute(ins, (username, password))
+		ins = 'INSERT INTO airline_staff VALUES(%s, %s, %s, %s, %s)'
+		cursor.execute(ins, (username, password, airline_name, fname, lname, dob))
 		conn.commit()
 		cursor.close()
 		return render_template('index.html')
