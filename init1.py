@@ -25,18 +25,6 @@ def landing():
 
     return render_template('landing_page.html', flights=filtered_data, err=no_search)
 
-@app.route('/loginRedirect', methods = ['GET', 'POST'])
-def formRedirect():
-    acc = request.form.get('accDropdown')
-    print(acc)
-
-    if (acc == "customer"):
-        return render_template('customerlogin.html')
-    elif (acc == "staff"):
-        return render_template('stafflogin.html')
-    else:
-        return render_template('landing_page.html')
-
 
 
 @app.route('/psearch', methods=['POST'])
