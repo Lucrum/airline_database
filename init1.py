@@ -2,6 +2,7 @@ import pymysql
 from pymysql import cursors
 from flask import Flask, render_template, request, session, url_for, redirect
 import search
+import hashlib
 
 app = Flask(__name__)
 
@@ -49,8 +50,8 @@ def psearch(prev_page):
         return render_template('landing_page.html', flights=filtered_data, err = True)
 
 
-@app.route('/home')
-def home():
+@app.route('/chome')
+def chome():
     username = session['username']
     cursor = conn.cursor()
     query = 'SELECT * FROM customer WHERE email = %s'
@@ -61,7 +62,7 @@ def home():
     name = full_info['first_name'] + " " + full_info['last_name']
 
     filtered_public_data = search.getPublicData()
-    print(filtered_public_data)
+
 
     # customer's flight data
     query = 'SELECT * FROM flight WHERE flight_number IN ' \
@@ -78,8 +79,13 @@ def home():
 
     cursor.close()
 
-    return render_template('home.html', username=name, public_flights=filtered_public_data,
+    return render_template('chome.html', username=name, public_flights=filtered_public_data,
                            cust_flights = filtered_customer_flights)
+
+@app.route('/shome')
+def shome():
+    username = session['username']
+    return render_template('shome.html', username=username)
 
 @app.route('/logout')
 def logout():
@@ -115,8 +121,8 @@ def sloginAuth():
     #cursor used to send queries
     cursor = conn.cursor()
     #executes query
-    query = 'SELECT * FROM user WHERE username = %s and password = %s'
-    cursor.execute(query, (username, password))
+    query = 'SELECT * FROM user WHERE username = %s and md5(password) = %s'
+    cursor.execute(query, (username, hashlib.md5(password.encode())).hexdigest())
     #stores the results in a variable
     data = cursor.fetchone()
     #use fetchall() if you are expecting more than 1 data row
@@ -126,7 +132,7 @@ def sloginAuth():
         #creates a session for the the user
         #session is a built in
         session['username'] = username
-        return redirect(url_for('home'))
+        return redirect(url_for('shome'))
     else:
         #returns an error message to the html page
         error = 'Invalid login or username'
@@ -135,27 +141,31 @@ def sloginAuth():
 @app.route('/cloginAuth', methods=['GET', 'POST'])
 def cloginAuth():
     #grabs information from the forms
-    username = request.form['cusername']
+    email = request.form['email']
     password = request.form['cpassword']
 
     #cursor used to send queries
     cursor = conn.cursor()
     #executes query
-    query = 'SELECT * FROM customer WHERE email = %s and c_password = %s'
-    cursor.execute(query, (username, password))
+    query = 'SELECT * FROM customer WHERE email = %s and md5(c_password) = %s'
+    cursor.execute(query, (email, hashlib.md5(password.encode())).hexdigest())
     #stores the results in a variable
     data = cursor.fetchone()
     #use fetchall() if you are expecting more than 1 data row
+    query2 = 'SELECT first_name FROM customer WHERE email = %s'
+    cursor.execute(query2, (email))
+    fname_data = cursor.fetchone()
+    fname = fname_data['first_name']
     cursor.close()
     error = None
     if(data):
         #creates a session for the the user
         #session is a built in
-        session['username'] = username
-        return redirect(url_for('home'))
+        session['username'] = fname
+        return redirect(url_for('chome'))
     else:
         #returns an error message to the html page
-        error = 'Invalid login or username'
+        error = 'Invalid login or email'
         return render_template('customerlogin.html', error=error)
 
 
@@ -163,14 +173,25 @@ def cloginAuth():
 @app.route('/cregisterAuth', methods=['GET', 'POST'])
 def cregisterAuth():
     #grabs information from the forms
-    username = request.form['cusername']
-    password = request.form['cpassword']
+    email = request.form['email']
+    fname = request.form['fname']
+    lname = request.form['lname']
+    password = request.form['password']
+    state = request.form['state']
+    city = request.form['city']
+    street = request.form['street']
+    building = request.form['building']
+    phone = request.form['phone']
+    passnum = request.form['passnum']
+    passexpi = request.form['passexpi']
+    passcountry = request.form['passcountry']
+    dob = request.form['dob']
 
     #cursor used to send queries
     cursor = conn.cursor()
     #executes query
     query = 'SELECT * FROM user WHERE username = %s'
-    cursor.execute(query, (username))
+    cursor.execute(query, (email))
     #stores the results in a variable
     data = cursor.fetchone()
     #use fetchall() if you are expecting more than 1 data row
@@ -180,8 +201,9 @@ def cregisterAuth():
         error = "This user already exists"
         return render_template('customerregister.html', error = error)
     else:
-        ins = 'INSERT INTO user VALUES(%s, %s)'
-        cursor.execute(ins, (username, password))
+        ins = 'INSERT INTO customer VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
+        cursor.execute(ins, (email, fname, lname, password, state, city, street, building, phone, passnum,
+                             passexpi, passcountry, dob))
         conn.commit()
         cursor.close()
         return render_template('index.html')
@@ -195,7 +217,7 @@ def sregisterAuth():
     fname = request.form['fname']
     lname = request.form['lname']
     dob = request.form['dob']
-    print(dob)
+    phone = request.form['phone']
 
 
     #cursor used to send queries
@@ -212,8 +234,11 @@ def sregisterAuth():
         error = "This user already exists"
         return render_template('staffregister.html', error = error)
     else:
-        ins = 'INSERT INTO airline_staff VALUES (%s, %s, %s, %s, %s, %s)'
+        ins = 'INSERT INTO airline_staff VALUES(%s, %s, %s, %s, %s, %s)'
         cursor.execute(ins, (username, password, airline_name, fname, lname, dob))
+        ins2 = 'INSERT INTO airline_staff_phone_number VALUES(%s, %s)'
+        for each in phone:
+            cursor.execute(ins2, (username, each))
         conn.commit()
         cursor.close()
         return render_template('index.html')
