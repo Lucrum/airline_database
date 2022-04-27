@@ -1,6 +1,7 @@
 import pymysql
 from pymysql import cursors
 from flask import Flask, render_template, request, session, url_for, redirect
+import search
 
 app = Flask(__name__)
 
@@ -15,32 +16,17 @@ app.secret_key = "secret"
 
 @app.route('/')
 def landing():
-    filtered_data = getPublicData()
+    filtered_data = search.getPublicData()
     if filtered_data:
         no_search = False
     else:
         no_search = True
 
-
-
     return render_template('landing_page.html', flights=filtered_data, err=no_search)
 
-@app.route('/loginRedirect', methods = ['GET', 'POST'])
-def formRedirect():
-    acc = request.form.get('accDropdown')
-    print(acc)
 
-    if (acc == "customer"):
-        return render_template('customerlogin.html')
-    elif (acc == "staff"):
-        return render_template('stafflogin.html')
-    else:
-        return render_template('landing_page.html')
-
-
-
-@app.route('/psearch', methods=['POST'])
-def psearch():
+@app.route('/psearch/<prev_page>', methods=['POST'])
+def psearch(prev_page):
     cursor = conn.cursor()
     search_tags = request.form['psearchf']
     if search_tags:
@@ -57,42 +43,48 @@ def psearch():
 
 
         cursor.close()
-        return render_template('psearch.html', field=search_tags, data=filtered_data)
+        return render_template(prev_page, field=search_tags, data=filtered_data)
     else:
-        filtered_data = getPublicData()
+        filtered_data = search.getPublicData()
         return render_template('landing_page.html', flights=filtered_data, err = True)
-
-def getPublicData():
-    cursor = conn.cursor()
-    query = 'SELECT * FROM flight'
-
-    cursor.execute(query)
-
-    data = cursor.fetchall()
-
-    cursor.close()
-    filtered_data = []
-    if (data):
-        for elem in data:
-            filtered_data.append([elem['airline_name'], elem['flight_number'],
-                                  elem['departure_date_time'][0:10], elem['arrival_date_time'][0:10]])
-    return filtered_data
 
 
 @app.route('/home')
 def home():
     username = session['username']
     cursor = conn.cursor()
-    query = 'SELECT airline_name FROM airline'
-    cursor.execute(query)
-    data = cursor.fetchall()
+    query = 'SELECT * FROM customer WHERE email = %s'
+    cursor.execute(query, username)
+
+    # public flight data
+    full_info = cursor.fetchone()
+    name = full_info['first_name'] + " " + full_info['last_name']
+
+    filtered_public_data = search.getPublicData()
+    print(filtered_public_data)
+
+    # customer's flight data
+    query = 'SELECT * FROM flight WHERE flight_number IN ' \
+            '(SELECT flight_number FROM ticket WHERE customer_email = %s)'
+
+    cursor.execute(query, username)
+
+    future_customer_flights = cursor.fetchall()
+    filtered_customer_flights = []
+    if(future_customer_flights):
+        for elem in future_customer_flights:
+            filtered_customer_flights.append([elem['airline_name'], elem['flight_number'],
+                                  elem['departure_date_time'][0:10], elem['arrival_date_time'][0:10]])
+
     cursor.close()
-    return render_template('home.html', username=username, posts=data)
+
+    return render_template('home.html', username=name, public_flights=filtered_public_data,
+                           cust_flights = filtered_customer_flights)
 
 @app.route('/logout')
 def logout():
     session.pop('username')
-    return redirect('/')
+    return render_template('customerlogin.html')
 
 @app.route('/loginRedirect/<acc_type>')
 def loginRedirect(acc_type):
@@ -117,8 +109,8 @@ def registerRedirect(acc_type):
 @app.route('/sloginAuth', methods=['GET', 'POST'])
 def sloginAuth():
     #grabs information from the forms
-    username = request.form['username']
-    password = request.form['password']
+    username = request.form['susername']
+    password = request.form['spassword']
 
     #cursor used to send queries
     cursor = conn.cursor()
@@ -143,13 +135,13 @@ def sloginAuth():
 @app.route('/cloginAuth', methods=['GET', 'POST'])
 def cloginAuth():
     #grabs information from the forms
-    username = request.form['username']
-    password = request.form['password']
+    username = request.form['cusername']
+    password = request.form['cpassword']
 
     #cursor used to send queries
     cursor = conn.cursor()
     #executes query
-    query = 'SELECT * FROM user WHERE username = %s and password = %s'
+    query = 'SELECT * FROM customer WHERE email = %s and c_password = %s'
     cursor.execute(query, (username, password))
     #stores the results in a variable
     data = cursor.fetchone()
@@ -171,8 +163,8 @@ def cloginAuth():
 @app.route('/cregisterAuth', methods=['GET', 'POST'])
 def cregisterAuth():
     #grabs information from the forms
-    username = request.form['username']
-    password = request.form['password']
+    username = request.form['cusername']
+    password = request.form['cpassword']
 
     #cursor used to send queries
     cursor = conn.cursor()
@@ -199,11 +191,17 @@ def sregisterAuth():
     #grabs information from the forms
     username = request.form['username']
     password = request.form['password']
+    airline_name = request.form['airline_name']
+    fname = request.form['fname']
+    lname = request.form['lname']
+    dob = request.form['dob']
+    print(dob)
+
 
     #cursor used to send queries
     cursor = conn.cursor()
     #executes query
-    query = 'SELECT * FROM user WHERE username = %s'
+    query = 'SELECT * FROM airline_staff WHERE username = %s'
     cursor.execute(query, (username))
     #stores the results in a variable
     data = cursor.fetchone()
@@ -214,8 +212,8 @@ def sregisterAuth():
         error = "This user already exists"
         return render_template('staffregister.html', error = error)
     else:
-        ins = 'INSERT INTO user VALUES(%s, %s)'
-        cursor.execute(ins, (username, password))
+        ins = 'INSERT INTO airline_staff VALUES (%s, %s, %s, %s, %s, %s)'
+        cursor.execute(ins, (username, password, airline_name, fname, lname, dob))
         conn.commit()
         cursor.close()
         return render_template('index.html')

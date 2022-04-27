@@ -3,8 +3,8 @@
 </head>
 <body>
 <form action="/cregisterAuth" method="POST">
-	<input type="text" name = "username" placeholder="Username" required/> </br>
-	<input type="password" name = "password" placeholder="Password" required/></br>
+	<input type="text" name = "cusername" placeholder="Username" required/> </br>
+	<input type="password" name = "cpassword" placeholder="Password" required/></br>
 	<input type="submit" value = Register />
 	{% if error %}
 		<p class="error"><strong>Error:</strong> {{error}}</p>
