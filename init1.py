@@ -1,6 +1,7 @@
 #Import Flask Library
 from flask import Flask, render_template, request, session, url_for, redirect
 import pymysql.cursors
+import hashlib
 
 #Initialize the app from Flask
 app = Flask(__name__)
@@ -47,8 +48,8 @@ def sloginAuth():
 	#cursor used to send queries
 	cursor = conn.cursor()
 	#executes query
-	query = 'SELECT * FROM airline_staff WHERE username = %s and s_password = %s'
-	cursor.execute(query, (username, password))
+	query = 'SELECT * FROM airline_staff WHERE username = %s and md5(s_password) = %s'
+	cursor.execute(query, (username, (hashlib.md5(password.encode())).hexdigest()))
 	#stores the results in a variable
 	data = cursor.fetchone()
 	#use fetchall() if you are expecting more than 1 data row
@@ -67,14 +68,14 @@ def sloginAuth():
 @app.route('/cloginAuth', methods=['GET', 'POST'])
 def cloginAuth():
 	#grabs information from the forms
-	username = request.form['username']
+	email = request.form['email']
 	password = request.form['password']
 
 	#cursor used to send queries
 	cursor = conn.cursor()
 	#executes query
-	query = 'SELECT * FROM customer WHERE email = %s and c_password = %s'
-	cursor.execute(query, (username, password))
+	query = 'SELECT * FROM customer WHERE email = %s and md5(c_password) = %s'
+	cursor.execute(query, (email, (hashlib.md5(password.encode())).hexdigest()))
 	#stores the results in a variable
 	data = cursor.fetchone()
 	#use fetchall() if you are expecting more than 1 data row
@@ -83,11 +84,12 @@ def cloginAuth():
 	if(data):
 		#creates a session for the the user
 		#session is a built in
-		session['username'] = username
-		return redirect(url_for('home'))
+		session['username'] = email
+		#return redirect(url_for('home'))
+		return render_template('customerpage.html')
 	else:
 		#returns an error message to the html page
-		error = 'Invalid login or username'
+		error = 'Invalid login or email'
 		return render_template('customerlogin.html', error=error)
 
 
@@ -140,6 +142,7 @@ def sregisterAuth():
 	fname = request.form['fname']
 	lname = request.form['lname']
 	dob = request.form['dob']
+	phone = request.form['phone']
 
 	#cursor used to send queries
 	cursor = conn.cursor()
@@ -157,6 +160,9 @@ def sregisterAuth():
 	else:
 		ins = 'INSERT INTO airline_staff VALUES(%s, %s, %s, %s, %s, %s)'
 		cursor.execute(ins, (username, password, airline_name, fname, lname, dob))
+		ins2 = 'INSERT INTO airline_staff_phone_number VALUES(%s, %s)'
+		for each in phone:
+			cursor.execute(ins2, (username, each))
 		conn.commit()
 		cursor.close()
 		return render_template('index.html')
@@ -165,20 +171,20 @@ def sregisterAuth():
 def home():
     
     username = session['username']
-    cursor = conn.cursor();
+    cursor = conn.cursor()
     query = 'SELECT ts, blog_post FROM blog WHERE username = %s ORDER BY ts DESC'
     cursor.execute(query, (username))
-    data1 = cursor.fetchall() 
+    data1 = cursor.fetchall()
     for each in data1:
         print(each['blog_post'])
     cursor.close()
-    return render_template('home.html', username=username, posts=data1)
+    return render_template('home.html', username=username) #posts=data1)
 
 		
 @app.route('/post', methods=['GET', 'POST'])
 def post():
 	username = session['username']
-	cursor = conn.cursor();
+	cursor = conn.cursor()
 	blog = request.form['blog']
 	query = 'INSERT INTO blog (blog_post, username) VALUES(%s, %s)'
 	cursor.execute(query, (blog, username))
