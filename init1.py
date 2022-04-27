@@ -61,6 +61,7 @@ def home():
     name = full_info['first_name'] + " " + full_info['last_name']
 
     filtered_public_data = search.getPublicData()
+    print(filtered_public_data)
 
     # customer's flight data
     query = 'SELECT * FROM flight WHERE flight_number IN ' \
