@@ -59,7 +59,7 @@ def sloginAuth():
 		#creates a session for the the user
 		#session is a built in
 		session['username'] = username
-		return redirect(url_for('home'))
+		return redirect(url_for('shome'))
 	else:
 		#returns an error message to the html page
 		error = 'Invalid login or username'
@@ -80,13 +80,19 @@ def cloginAuth():
 	data = cursor.fetchone()
 	#use fetchall() if you are expecting more than 1 data row
 	cursor.close()
+	cursor = conn.cursor()
+	query2 = 'SELECT first_name FROM customer WHERE email = %s'
+	cursor.execute(query2, (email))
+	fname_data = cursor.fetchone()
+	fname = fname_data['first_name']
+	cursor.close()
 	error = None
 	if(data):
 		#creates a session for the the user
 		#session is a built in
-		session['username'] = email
-		#return redirect(url_for('home'))
-		return render_template('customerpage.html')
+		session['username'] = fname
+		return redirect(url_for('chome'))
+
 	else:
 		#returns an error message to the html page
 		error = 'Invalid login or email'
@@ -167,18 +173,24 @@ def sregisterAuth():
 		cursor.close()
 		return render_template('index.html')
 
-@app.route('/home')
-def home():
-    
+@app.route('/chome')
+def chome():
     username = session['username']
-    cursor = conn.cursor()
-    query = 'SELECT ts, blog_post FROM blog WHERE username = %s ORDER BY ts DESC'
-    cursor.execute(query, (username))
-    data1 = cursor.fetchall()
-    for each in data1:
-        print(each['blog_post'])
-    cursor.close()
-    return render_template('home.html', username=username) #posts=data1)
+    # cursor = conn.cursor()
+    # query = 'SELECT ts, blog_post FROM blog WHERE username = %s ORDER BY ts DESC'
+    # cursor.execute(query, (username))
+    # data1 = cursor.fetchall()
+    # for each in data1:
+    #     print(each['blog_post'])
+    # cursor.close()
+    return render_template('chome.html', username=username) #posts=data1)
+
+
+@app.route('/shome')
+def shome():
+	username = session['username']
+
+	return render_template('shome.html', username=username)
 
 		
 @app.route('/post', methods=['GET', 'POST'])
