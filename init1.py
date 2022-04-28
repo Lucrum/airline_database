@@ -55,6 +55,7 @@ def chome():
     username = session['username']
     cursor = conn.cursor()
     query = 'SELECT * FROM customer WHERE email = %s'
+    print(username)
     cursor.execute(query, username)
 
     # public flight data
@@ -80,12 +81,48 @@ def chome():
     cursor.close()
 
     return render_template('chome.html', username=name, public_flights=filtered_public_data,
-                           cust_flights = filtered_customer_flights)
+                           cust_flights=filtered_customer_flights)
 
 @app.route('/shome')
 def shome():
     username = session['username']
-    return render_template('shome.html', username=username)
+    cursor = conn.cursor()
+    # public flight data
+
+    filtered_public_data = search.getPublicData()
+
+    return render_template('shome.html', username=username, public_flights=filtered_public_data)
+
+@app.route('/create_new_flight')
+def create_new_flight():
+    return render_template('create_flight.html')
+
+@app.route("/newFlight", methods=['post'])
+def newFlight():
+
+    cursor = conn.cursor()
+    flight_no = request.form['flight_number']
+    flight_status = request.form['flight_status']
+    dept_date = request.form['departure_date']
+    arri_date = request.form['arrival_date']
+    airline = request.form['airline']
+    airplane = request.form['airplane_id']
+    dept_code = request.form['dept_code']
+    arriv_code = request.form['arriv_code']
+    base_price = request.form['base_price']
+
+    # checks if duplicate flight number
+    query = 'SELECT * FROM flight WHERE flight_number = %s'
+    cursor.execute(query, flight_no)
+    dup_flight = cursor.fetchone()
+    if (dup_flight):
+        return render_template('create_flight.html', error="Duplicate flight number")
+    else:
+        query = 'INSERT INTO flight VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)'
+        cursor.execute(query, (flight_no, flight_status, dept_date, airline,
+                               airplane, dept_code, arriv_code, arri_date, base_price))
+        return render_template('create_flight.html', success="Flight" + flight_no + "created!")
+
 
 @app.route('/logout')
 def logout():
@@ -121,8 +158,8 @@ def sloginAuth():
     #cursor used to send queries
     cursor = conn.cursor()
     #executes query
-    query = 'SELECT * FROM user WHERE username = %s and md5(password) = %s'
-    cursor.execute(query, (username, hashlib.md5(password.encode())).hexdigest())
+    query = 'SELECT * FROM airline_staff WHERE username = %s and md5(s_password) = %s'
+    cursor.execute(query, (username, hashlib.md5(password.encode()).hexdigest()))
     #stores the results in a variable
     data = cursor.fetchone()
     #use fetchall() if you are expecting more than 1 data row
@@ -148,20 +185,17 @@ def cloginAuth():
     cursor = conn.cursor()
     #executes query
     query = 'SELECT * FROM customer WHERE email = %s and md5(c_password) = %s'
-    cursor.execute(query, (email, hashlib.md5(password.encode())).hexdigest())
+    cursor.execute(query, (email, (hashlib.md5(password.encode())).hexdigest()))
     #stores the results in a variable
     data = cursor.fetchone()
-    #use fetchall() if you are expecting more than 1 data row
-    query2 = 'SELECT first_name FROM customer WHERE email = %s'
-    cursor.execute(query2, (email))
-    fname_data = cursor.fetchone()
-    fname = fname_data['first_name']
-    cursor.close()
+
     error = None
     if(data):
         #creates a session for the the user
         #session is a built in
-        session['username'] = fname
+        # the username of customers is the email
+        # it's possible we have 2 customers with the same name!!
+        session['username'] = email
         return redirect(url_for('chome'))
     else:
         #returns an error message to the html page

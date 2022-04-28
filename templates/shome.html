@@ -14,7 +14,7 @@
 <div>
     {% if public_flights %}
         <p>Public flights:</p>
-        <form action="/psearch/chome.html" method="post" style="margin:0px">
+        <form action="/psearch/shome.html" method="post" style="margin:0px">
             <input type="text" name="psearchf" placeholder="Search flights"/>
             <input type="submit" value="Search"/>
             {% if err %}
@@ -43,33 +43,9 @@
         <p>There are currently no public flights to display</p>
     {% endif %}
 
-    {% if cust_flights %}
-        <p>Your flights:</p>
-        <form action="">
-
-        </form>
-        <br>
-        <table style="text-align:left">
-
-            <th style>Airline</th>
-            <th>Flight Number</th>
-            <th>Departure Date</th>
-            <th>Arrival Date</th>
-            {% for elem in cust_flights %}
-                <tr>
-                    {% for data in elem %}
-                        <td> {{ data }} </td>
-                    {% endfor %}
-                </tr>
-            {% endfor %}
-
-
-        </table>
-    {% else %}
-        <p>You have no upcoming flights.</p>
-    {% endif %}
-
 </div>
+
+<a href="/create_new_flight">New flight</a><br>
 
 <a href="/logout">Logout</a>
 
