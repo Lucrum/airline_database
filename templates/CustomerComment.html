@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Customer Ratings</title>
+  </head>
+
+  <body>
+
+<form action= "" method="post">
+
+  <h1>Add a Comment</h1>
+  <input type="text" name="Airline Name" placeholder="Airline Name" required>
+  <input type="text" name="Flight Number" placeholder="Flight Number" required>
+  <!--On a scale of 1 to 10-->
+  <input type="number" min="0" max = "10" name="Rating" placeholder="Rating" required>
+  <input type="datetime-local" name="Departure Date" placeholder="Departure Date" required>
+  <br>
+  <textarea name="Comments" rows = "4" cols = "100" required> </textarea>
+  <br>
+  <input type="submit" name="" value="Submit">
+  <br>
+  {% if error %}
+	<error_status> {{status}} <status>
+  {% else %}
+	{% if status %}
+		<status> {{status}} <status>
+	{% endif %}
+  {% endif %}
+
+  
+</form>
+
+  </body>
+</html>
