@@ -29,6 +29,9 @@
             <th>Flight Number</th>
             <th>Departure Date</th>
             <th>Arrival Date</th>
+            <th>Flight Status</th>
+            <th>Departure Airport</th>
+            <th>Arrival Airport</th>
             {% for elem in public_flights %}
                 <tr>
                     {% for data in elem %}
@@ -44,32 +47,55 @@
     {% endif %}
 
     {% if cust_flights %}
-        <p>Your flights:</p>
-        <form action="">
+        <form action="/cancel_flight" method="post">
+            <p>Your flights:</p>
+            <table style="text-align:left">
+
+                <th>Ticket ID</th>
+                <th>Flight Number</th>
+                <th>Flight Status</th>
+                <th>Departure Airport</th>
+                <th>Departure Date</th>
+                <th>Arrival Airport</th>
+                <th>Arrival Date</th>
+                <th>Airline</th>
+                <th>Travel Class</th>
+                <th>Cost</th>
+                    {% for elem in cust_flights %}
+                        <tr>
+                            {% for data in elem %}
+                                <td> {{ data }} </td>
+                            {% endfor %}
+
+                            {% if elem[2] == 'Complete' %}
+                                <td><a href="{{ url_for('ratings', flight_number=elem[1]) }}">Rate</a></td>
+                            {% else %}
+                                <td><input type="radio" name="selected_ticket" value="{{ elem[0] }} " required></td>
+                            {% endif %}
+                        </tr>
+                    {% endfor %}
+
+            </table>
+            <input type="submit" value="Cancel selected flight" style="margin-top:10px">
 
         </form>
-        <br>
-        <table style="text-align:left">
 
-            <th style>Airline</th>
-            <th>Flight Number</th>
-            <th>Departure Date</th>
-            <th>Arrival Date</th>
-            {% for elem in cust_flights %}
-                <tr>
-                    {% for data in elem %}
-                        <td> {{ data }} </td>
-                    {% endfor %}
-                </tr>
-            {% endfor %}
-
-
-        </table>
     {% else %}
         <p>You have no upcoming flights.</p>
     {% endif %}
 
+    {% if fail_cancel %}
+        <p class="error"><strong>{{ fail_cancel }}</strong></p>
+    {% else %}
+        {% if cancel_success %}
+            <p style="color:green">{{ cancel_success }}</p>
+        {% else %}
+        {% endif %}
+    {% endif %}
+
 </div>
+
+<a href="{{ url_for('buy_ticket_redirect', step='listings') }}">Book a flight</a><br>
 
 <a href="/logout">Logout</a>
 

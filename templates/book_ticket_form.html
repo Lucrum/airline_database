@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Ticket Booking Form</title>
+</head>
+<body>
+<div>
+    <h1>Flight {{ flight_number }}, {{ departure }} &rArr; {{ arrival }} — ${{ price }}</h1>
+</div>
+
+
+<form action="{{ url_for('buy_ticket', flight_number=flight_number, price=price) }}" method="post">
+    <input type="radio" name="class" value="First Class" required/>First Class<br>
+    <input type="radio" name="class" value="Business Class" required/>Business Class<br>
+    <input type="radio" name="class" value="Economy Class" required/>Economy Class<br>
+    <br>
+
+    <input type="text" name="cc" placeholder="Card number(not stored)" required/>
+    <select name="card_type" id="cards" required>
+        <option value="Debit">Debit</option>
+        <option value="Credit">Credit</option>
+    </select><br>
+    <input type="text" name="name_card" placeholder="Name on card" required/><br>
+
+    Expiry date: <input type="date" name="expiry" required/><br>
+
+
+    <input type="submit" value="Book"/>
+</form>
+
+</body>
+</html>
