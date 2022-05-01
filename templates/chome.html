@@ -1,12 +1,79 @@
 <html>
 <head>
+    <style type="text/css">
+	table, th, td{
+		border: 1px solid black;
+	}
+</style>
 </head>
 <body>
-<form action="/post" method="POST">
-	<h1>Welcome {{username}}</h1>
+<h1>Welcome, {{ username }}</h1>
 
-</form>
+
+
+<div>
+    {% if public_flights %}
+        <p>Public flights:</p>
+        <form action="/psearch/chome.html" method="post" style="margin:0px">
+            <input type="text" name="psearchf" placeholder="Search flights"/>
+            <input type="submit" value="Search"/>
+            {% if err %}
+                <p style="color:red">Please enter something to search for!</p>
+            {% else %}
+            {% endif %}
+        </form>
+        <br>
+        <table style="text-align:left">
+
+            <th style>Airline</th>
+            <th>Flight Number</th>
+            <th>Departure Date</th>
+            <th>Arrival Date</th>
+            {% for elem in public_flights %}
+                <tr>
+                    {% for data in elem %}
+                        <td> {{ data }} </td>
+                    {% endfor %}
+                </tr>
+            {% endfor %}
+
+
+        </table>
+    {% else %}
+        <p>There are currently no public flights to display</p>
+    {% endif %}
+
+    {% if cust_flights %}
+        <p>Your flights:</p>
+        <form action="">
+
+        </form>
+        <br>
+        <table style="text-align:left">
+
+            <th style>Airline</th>
+            <th>Flight Number</th>
+            <th>Departure Date</th>
+            <th>Arrival Date</th>
+            {% for elem in cust_flights %}
+                <tr>
+                    {% for data in elem %}
+                        <td> {{ data }} </td>
+                    {% endfor %}
+                </tr>
+            {% endfor %}
+
+
+        </table>
+    {% else %}
+        <p>You have no upcoming flights.</p>
+    {% endif %}
+
+</div>
+
+<a href="/logout">Logout</a>
 
 </body>
+
 
 </html>

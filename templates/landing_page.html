@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/html">
+<head>
+    <meta charset="UTF-8">
+    <title>Landing Page</title>
+    <style>
+    table, th, td {
+        border: 1px solid black;
+    }
+    * {
+        margin: 10px;
+    }
+    </style>
+</head>
+<body>
+
+<div>
+    <h1 style="float:left">Welcome, guest!</h1>
+    <p style="float:right; margin:0px">You are not logged in and may only view public data.</p><br>
+
+
+    <div style="float:right">
+        <a href="{{ url_for('loginRedirect', acc_type='customer') }}">Login here</a><br>
+        <a href="{{ url_for('registerRedirect', acc_type='customer') }}">Register here</a>
+    </div>
+
+
+</div>
+<br><br>
+<form action="/psearch/psearch.html" method="post" style="margin:0px">
+    <input type="text" name="psearchf" placeholder="Search flights"/>
+    <input type="submit" value="Search"/>
+    {% if err %}
+        <p style="color:red">Please enter something to search for!</p>
+    {% else %}
+    {% endif %}
+</form>
+
+
+{% if flights %}
+    <table style="text-align:left">
+
+        <th style>Airline</th>
+        <th>Flight Number</th>
+        <th>Departure Date</th>
+        <th>Arrival Date</th>
+        {% for elem in flights %}
+            <tr>
+                {% for data in elem %}
+                    <td> {{ data }} </td>
+                {% endfor %}
+            </tr>
+        {% endfor %}
+
+
+    </table>
+{% else %}
+    <p>There are currently no flights to display</p>
+{% endif %}
+
+
+
+</body>
+</html>
