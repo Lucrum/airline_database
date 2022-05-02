@@ -145,6 +145,7 @@ def chome():
 @app.route('/shome')
 def shome():
     username = session['username']
+    cursor = conn.cursor()
     # public flight data
 
     filtered_public_data = search.getPublicData()
@@ -401,8 +402,8 @@ def newFlight():
     cursor = conn.cursor()
     flight_no = request.form['flight_number']
     flight_status = request.form['flight_status']
-    dept_date = request.form['departure_date']
-    arri_date = request.form['arrival_date']
+    dept_datetime = request.form['departure_date']
+    arri_datetime = request.form['arrival_date']
     airline = request.form['airline']
     airplane = request.form['airplane_id']
     dept_code = request.form['dept_code']
@@ -425,6 +426,232 @@ def newFlight():
         return render_template('create_flight.html', success="Flight" + flight_no + "created!")
 
 
+@app.route('/change_status_of_flight')
+def change_status_of_flight():
+    return render_template('change_status.html')
+
+
+# LOGIN
+
+
+@app.route("/changeStatus", methods=['post'])
+def changeStatus():
+    cursor = conn.cursor()
+    flight_num = request.form['flight_number']
+    flight_status = request.form['flight_status']
+    query = 'SELECT * FROM flight WHERE flight_number = %s'
+    cursor.execute(query, flight_num)
+    flight_exist = cursor.fetchone()
+
+    if (flight_exist):
+        query2 = 'UPDATE flight SET flight_status  = %s WHERE flight_number = %s'
+        cursor.execute(query2, (flight_status, flight_num))
+        cursor.close()
+        return render_template('change_status.html', success="Status of " + flight_num + " has been changed!")
+    else:
+
+        return render_template('change_status.html', error="Invalid flight number!")
+
+
+@app.route('/add_airplane')
+def add_airplane():
+    cursor = conn.cursor()
+    query3 = 'SELECT airline_name FROM airline'
+    cursor.execute(query3)
+    airline_list = cursor.fetchall()
+    cursor.close()
+    return render_template('add_plane.html', airline_list=airline_list)
+
+
+@app.route('/addPlane', methods=['post'])
+def addPlane():
+    cursor = conn.cursor()
+    airplane_id = request.form['airplane_id']
+    num_of_seats = request.form['num_of_seats']
+    manu = request.form['manufacturer']
+    age = request.form['age']
+    airline = request.form['airline']
+    query = 'SELECT * FROM airplane WHERE airplane_id = %s'
+    cursor.execute(query, airplane_id)
+    dup_plane = cursor.fetchone()
+
+    if (dup_plane):
+        return render_template('add_plane.html', error="This airplane already exists!")
+    else:
+        query2 = 'INSERT INTO airplane VALUES (%s, %s, %s, %s, %s)'
+        cursor.execute(query2, (airplane_id, num_of_seats, manu, age, airline))
+
+        query1 = 'SELECT * FROM airplane WHERE airline_name = %s'
+        cursor.execute(query1, airline)
+        data = cursor.fetchall()
+
+        cursor.close()
+        filtered_data = []
+
+        for elem in data:
+            filtered_data.append([elem['airplane_id'], elem['num_of_seats'],
+                                  elem['manufacturer'], elem['age'], elem['airline_name']])
+
+        cursor.close()
+        return render_template('add_plane_confirmation.html', airplanes=filtered_data)
+
+@app.route('/add_airport')
+def add_airport():
+    return render_template('add_new_airport.html')
+
+@app.route("/addAirport", methods=['post'])
+def addAirport():
+    cursor = conn.cursor()
+    airport_code = request.form['airport_code']
+    airport_name = request.form['airport_name']
+    country = request.form['country']
+    city = request.form['city']
+    type = request.form['type']
+    query = 'SELECT * FROM airport WHERE airport_code = %s'
+    cursor.execute(query, airport_code)
+    airport_exist = cursor.fetchone()
+
+    if (airport_exist):
+        cursor.close()
+        return render_template('add_new_airport.html', error="This airport already exists!")
+
+    else:
+
+        query2 = 'INSERT INTO airport VALUES (%s, %s, %s, %s, %s)'
+        cursor.execute(query2, (airport_code, airport_name, country, city, type))
+        cursor.close()
+
+        return render_template('add_new_airport.html', success="Airport " + airport_code + " has been added!")
+
+
+@app.route('/view_report')
+def view_report():
+    return render_template('view_report.html')
+
+
+@app.route("/viewReport", methods=['post'])
+def viewReport():
+    cursor = conn.cursor()
+    last = request.form['last']
+    if last == 'last_month':
+        query1 = 'SELECT COUNT(*) as num_tickets_sold FROM ticket WHERE date(purchase_date_time) > subdate(CURRENT_DATE, INTERVAL 1 MONTH)'
+        cursor.execute(query1)
+        result = cursor.fetchone()
+
+    elif last == 'last_year':
+        query2 = 'SELECT COUNT(*) as num_tickets_sold FROM ticket WHERE date(purchase_date_time) > subdate(CURRENT_DATE, INTERVAL 1 YEAR)'
+        cursor.execute(query2)
+        result = cursor.fetchone()
+
+    elif last == 'between':
+        date1 = request.form['date1']
+        date2 = request.form['date2']
+        query3 = 'SELECT COUNT(*) as num_tickets_sold FROM ticket WHERE date(purchase_date_time) BETWEEN %s AND %s'
+        cursor.execute(query3, (date1, date2))
+        result = cursor.fetchone()
+
+    else:
+        return render_template('view_report_result.html', error='You must make a choice!')
+
+    result_num = result['num_tickets_sold']
+    query4 = 'SELECT MONTH(purchase_date_time) AS month FROM ticket'
+    cursor.execute(query4)
+    data = cursor.fetchall()
+
+    months = []
+    for each in data:
+        months.append(each['month'])
+
+    nums = []
+    for i in months:
+        query5 = 'SELECT COUNT(*) AS num FROM ticket WHERE MONTH(purchase_date_time) = %s'
+        cursor.execute(query5, i)
+        data2 = cursor.fetchone()
+        nums.append(data2)
+
+    cursor.close()
+
+    return render_template('view_report_result.html', number=result_num, months=months, nums=nums)
+
+
+@app.route('/view_top_des')
+def view_top_des():
+    return render_template('view_top_des.html')
+
+
+@app.route("/viewDes", methods=['post'])
+def viewDes():
+    cursor = conn.cursor()
+    last = request.form['last']
+
+    if last == 'last_three_month':
+        query1 = 'SELECT airport.city AS city, arrival_airport_code AS des_code,  COUNT(ticket_id) AS num_ticket FROM ticket, \
+            flight, airport WHERE ticket.flight_number=flight.flight_number AND flight.arrival_airport_code=airport.airport_code \
+            AND date(purchase_date_time) > subdate(CURRENT_DATE, INTERVAL 3 MONTH) GROUP BY arrival_airport_code \
+            ORDER BY num_ticket DESC LIMIT 3'
+        cursor.execute(query1)
+        data = cursor.fetchall()
+    elif last == 'last_year':
+        query2 = 'SELECT airport.city AS city, arrival_airport_code AS des_code,  COUNT(ticket_id) AS num_ticket FROM ticket, flight, \
+            airport WHERE ticket.flight_number=flight.flight_number AND flight.arrival_airport_code=airport.airport_code AND \
+            date(purchase_date_time) > subdate(CURRENT_DATE, INTERVAL 1 YEAR) GROUP BY arrival_airport_code ORDER BY num_ticket DESC LIMIT 3'
+        cursor.execute(query2)
+        data = cursor.fetchall()
+    else:
+        return render_template('view_top_des.html', error="You must make a choice!")
+
+    filtered_data = []
+
+    for elem in data:
+        filtered_data.append([elem['city'], elem['des_code'], elem['num_ticket']])
+
+    cursor.close()
+
+    return render_template('view_top_des_result.html', data=filtered_data)
+
+@app.route('/view_revenue')
+def view_revenue():
+    cursor = conn.cursor()
+    query1 = 'SELECT SUM(sold_price) as total_revenue_m FROM ticket WHERE date(purchase_date_time) > subdate(CURRENT_DATE, INTERVAL 1 MONTH)'
+    query2 = 'SELECT SUM(sold_price) as total_revenue_y FROM ticket WHERE date(purchase_date_time) > subdate(CURRENT_DATE, INTERVAL 1 YEAR)'
+    cursor.execute(query1)
+    mdata = cursor.fetchone()
+    cursor.execute(query2)
+    ydata = cursor.fetchone()
+    cursor.close()
+    return render_template('view_revenue.html', mdata=mdata, ydata=ydata)
+
+@app.route('/view_revenue_class')
+def view_revenue_class():
+    cursor = conn.cursor()
+    query11 = "SELECT (CASE WHEN SUM(sold_price) is not null THEN SUM(sold_price) ELSE 0 END) as total_revenue_m\
+     FROM ticket WHERE date(purchase_date_time) > subdate(CURRENT_DATE, INTERVAL 1 MONTH) AND travel_class = 'First Class'"
+    query12 = "SELECT (CASE WHEN SUM(sold_price) is not null THEN SUM(sold_price) ELSE 0 END) as total_revenue_m\
+     FROM ticket WHERE date(purchase_date_time) > subdate(CURRENT_DATE, INTERVAL 1 MONTH) AND travel_class = 'Business Class'"
+    query13 = "SELECT (CASE WHEN SUM(sold_price) is not null THEN SUM(sold_price) ELSE 0 END) as total_revenue_m\
+     FROM ticket WHERE date(purchase_date_time) > subdate(CURRENT_DATE, INTERVAL 1 MONTH) AND travel_class = 'Economy Class'"
+    query21 =  "SELECT (CASE WHEN SUM(sold_price) is not null THEN SUM(sold_price) ELSE 0 END) as total_revenue_y\
+     FROM ticket WHERE date(purchase_date_time) > subdate(CURRENT_DATE, INTERVAL 1 YEAR) AND travel_class= 'First Class'"
+    query22 = "SELECT (CASE WHEN SUM(sold_price) is not null THEN SUM(sold_price) ELSE 0 END) as total_revenue_y\
+     FROM ticket WHERE date(purchase_date_time) > subdate(CURRENT_DATE, INTERVAL 1 YEAR) AND travel_class= 'Business Class'"
+    query23 = "SELECT (CASE WHEN SUM(sold_price) is not null THEN SUM(sold_price) ELSE 0 END) as total_revenue_y\
+     FROM ticket WHERE date(purchase_date_time) > subdate(CURRENT_DATE, INTERVAL 1 YEAR) AND travel_class= 'Economy Class'"
+    cursor.execute(query11)
+    mdata1 = cursor.fetchone()
+    cursor.execute(query12)
+    mdata2 = cursor.fetchone()
+    cursor.execute(query13)
+    mdata3 = cursor.fetchone()
+    cursor.execute(query21)
+    ydata1 = cursor.fetchone()
+    cursor.execute(query22)
+    ydata2 = cursor.fetchone()
+    cursor.execute(query23)
+    ydata3 = cursor.fetchone()
+
+    cursor.close()
+    return render_template('view_revenue_class.html', mdata1=mdata1, mdata2=mdata2, mdata3=mdata3,
+                           ydata1=ydata1, ydata2=ydata2, ydata3=ydata3)
 
 # LOGIN
 
@@ -546,7 +773,7 @@ def cregisterAuth():
                              passexpi, passcountry, dob))
         conn.commit()
         cursor.close()
-        return render_template('index.html')
+        return render_template('customerlogin.html')
 
 @app.route('/sregisterAuth', methods=['GET', 'POST'])
 def sregisterAuth():
@@ -582,7 +809,7 @@ def sregisterAuth():
             cursor.execute(ins2, (username, each))
         conn.commit()
         cursor.close()
-        return render_template('index.html')
+        return render_template('stafflogin.html')
 
 
 
