@@ -198,7 +198,7 @@ def buy_ticket():
     cursor = conn.cursor()
 
     flight_number = request.args.get('flight_number')
-    price = request.args.get('price')
+    price = request.form['final_cost']
 
     # get departure date
     query = 'SELECT departure_date_time FROM flight WHERE flight_number = %s'
@@ -266,7 +266,7 @@ def cancel_flight():
 
     now = datetime.now()
 
-    departure_datetime = datetime.strptime(departure, '%Y-%m-%d')
+    departure_datetime = datetime.strptime(departure, '%Y-%m-%d %H:%M:%S')
 
     time_diff = departure_datetime - now
     time_diff_hours = divmod(time_diff.total_seconds(), 3600)[0]

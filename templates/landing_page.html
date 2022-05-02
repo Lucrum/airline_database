@@ -27,17 +27,11 @@
 
 </div>
 <br><br>
-<form action="/psearch/psearch.html" method="post" style="margin:0px">
-    <input type="text" name="psearchf" placeholder="Search flights"/>
-    <input type="submit" value="Search"/>
-    {% if err %}
-        <p style="color:red">Please enter something to search for!</p>
-    {% else %}
-    {% endif %}
-</form>
+
 
 
 {% if flights %}
+    <h2>Public flight information:</h2>
     <table style="text-align:left">
 
         <th style>Airline</th>
@@ -57,9 +51,20 @@
 
 
     </table>
+
+    <form action="/psearch/psearch.html" method="post" style="margin:0px">
+        <input type="text" name="psearchf" placeholder="Search flights"/>
+        <input type="submit" value="Search"/>
+        {% if err %}
+            <p style="color:red">Please enter something to search for!</p>
+        {% else %}
+        {% endif %}
+    </form>
 {% else %}
     <p>There are currently no flights to display</p>
 {% endif %}
+
+
 
 
 

@@ -3,17 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <title>Ticket Booking Form</title>
+
+    <script>
+        var cost = {{ price }}
+        function changeClass(selection) {
+            new_cost = cost * selection.value;
+            document.getElementById("price_header").textContent = '$' + (new_cost);
+            document.getElementById("fincost").value = new_cost;
+        }
+
+    </script>
+
 </head>
 <body>
 <div>
-    <h1>Flight {{ flight_number }}, {{ departure }} &rArr; {{ arrival }} — ${{ price }}</h1>
+    <h1 id="header">Flight {{ flight_number }}, {{ departure }} &rArr; {{ arrival }}</h1>
+    <h1 id="price_header">${{ price }}</h1>
 </div>
 
 
-<form action="{{ url_for('buy_ticket', flight_number=flight_number, price=price) }}" method="post">
-    <input type="radio" name="class" value="First Class" required/>First Class<br>
-    <input type="radio" name="class" value="Business Class" required/>Business Class<br>
-    <input type="radio" name="class" value="Economy Class" required/>Economy Class<br>
+<form action="{{ url_for('buy_ticket', flight_number=flight_number) }}" method="post">
+    <input type="radio" name="class" value=3 onclick="changeClass(this);" required/>First Class<br>
+    <input type="radio" name="class" value=2 onclick="changeClass(this);" required/>Business Class<br>
+    <input type="radio" name="class" value=1 onclick="changeClass(this);" required checked="checked"/>Economy Class<br>
+    <input type="hidden" name="final_cost" id="fincost" value="{{ price }}">
     <br>
 
     <input type="text" name="cc" placeholder="Card number(not stored)" required/>
@@ -28,6 +41,7 @@
 
     <input type="submit" value="Book"/>
 </form>
+
 
 </body>
 </html>
