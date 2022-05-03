@@ -1,0 +1,1 @@
+FOR customer rating need to alter table to create a purchase record instead of ticket record
