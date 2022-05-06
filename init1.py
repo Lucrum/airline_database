@@ -138,39 +138,40 @@ def chome():
 
 
         # customer's future flights
-        query = 'SELECT * FROM flight WHERE flight_number IN ' \
-                '(SELECT flight_number FROM ticket WHERE customer_email = %s) ' \
-                'AND departure_date_time > DATE %s'
+        query = 'SELECT * FROM ticket WHERE departure_date_time > DATE %s'
 
         now = datetime.now()
         dt_string = now.strftime("%Y/%m/%d")
 
-        cursor.execute(query, (username, dt_string))
+        cursor.execute(query, dt_string)
         cust_future_flights = cursor.fetchall()
+
+        print("future flights", cust_future_flights)
 
 
 
         if (cust_future_flights):
-            for flight in cust_future_flights:
+            for ticket in cust_future_flights:
 
                 to_append = []
 
                 rest = []
-
-                for ticket in customer_tickets:
-                    if (ticket['flight_number'] == flight['flight_number']):
+                found = False
+                for flight in customer_flights:
+                    if (flight['flight_number'] == ticket['flight_number'] and not found):
                         to_append.append(ticket['ticket_id'])
+
 
                         rest = [ticket['airline_name'], ticket['travel_class'],
                                 "$"+str(ticket['sold_price'])]
+                        found = True
 
-
-                to_append += [flight['flight_number'],
-                             flight['flight_status'],
-                             flight['departure_airport_code'],
-                             flight['departure_date_time'][0:10],
-                             flight['arrival_airport_code'],
-                             flight['arrival_date_time'][0:10]]
+                        to_append += [flight['flight_number'],
+                                     flight['flight_status'],
+                                     flight['departure_airport_code'],
+                                     flight['departure_date_time'][0:10],
+                                     flight['arrival_airport_code'],
+                                     flight['arrival_date_time'][0:10]]
                 to_append += rest
                 filtered_future_customer_flights.append(to_append)
 
