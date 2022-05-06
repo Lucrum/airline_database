@@ -64,25 +64,25 @@
 
         </table>
 
-        <form action="{{ url_for('psearch', type='source', prev='chome', sec='public') }}" method="post" style="margin-top:10px">
+        <form action="{{ url_for('psearch', type='source', prev='chome', sec='user') }}" method="post" style="margin-top:10px">
             <input type="text" name="psearchf" placeholder="Search by source city or airport"
                    style="width:315px" required>
             <input type="submit" value="Search"/>
         </form>
 
-        <form action="{{ url_for('psearch', type='dest', prev='chome', sec='public') }}" method="post" style="margin-top:10px">
+        <form action="{{ url_for('psearch', type='dest', prev='chome', sec='user') }}" method="post" style="margin-top:10px">
             <input type="text" name="psearchf" placeholder="Search by destination city or airport"
                    style="width:315px" required>
             <input type="submit" value="Search"/>
         </form>
 
 
-        <form action="{{ url_for('psearch', type='dates', prev='chome', sec='public') }}" method="post" style="margin-top:10px">
+        <form action="{{ url_for('psearch', type='dates', prev='chome', sec='user') }}" method="post" style="margin-top:10px">
             Search by dates<br>
-            <label for="dept">By departure date:</label>
-            <input type="datetime-local" id="dept" name="psearchf" style="margin-top:10px" required><br>
-            <label for="arriv">By return date:</label>
-            <input type="datetime-local" id="arriv" name="ret_date" style="margin-top:10px" >
+            <label for="dept2">By departure date:</label>
+            <input type="datetime-local" id="dept2" name="psearchf" style="margin-top:10px" required><br>
+            <label for="arriv2">By return date:</label>
+            <input type="datetime-local" id="arriv2" name="ret_date" style="margin-top:10px" >
             <input type="submit" value="Search">
         </form>
     {% else %}
@@ -121,6 +121,28 @@
             </table>
             <input type="submit" value="Cancel selected flight" style="margin-top:10px">
 
+        </form>
+
+        <form action="{{ url_for('psearch', type='source', prev='chome', sec='public') }}" method="post" style="margin-top:10px">
+            <input type="text" name="psearchf" placeholder="Search by source city or airport"
+                   style="width:315px" required>
+            <input type="submit" value="Search"/>
+        </form>
+
+        <form action="{{ url_for('psearch', type='dest', prev='chome', sec='public') }}" method="post" style="margin-top:10px">
+            <input type="text" name="psearchf" placeholder="Search by destination city or airport"
+                   style="width:315px" required>
+            <input type="submit" value="Search"/>
+        </form>
+
+
+        <form action="{{ url_for('psearch', type='dates', prev='chome', sec='public') }}" method="post" style="margin-top:10px">
+            Search by dates<br>
+            <label for="dept">By departure date:</label>
+            <input type="datetime-local" id="dept" name="psearchf" style="margin-top:10px" required><br>
+            <label for="arriv">By return date:</label>
+            <input type="datetime-local" id="arriv" name="ret_date" style="margin-top:10px" >
+            <input type="submit" value="Search">
         </form>
 
     {% else %}
