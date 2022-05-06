@@ -88,7 +88,6 @@ def chome():
 def shome():
     username = session['username']
     cursor = conn.cursor()
-    # public flight data
 
     filtered_public_data = search.getPublicData()
 
@@ -218,43 +217,79 @@ def view_report():
 
 @app.route("/viewReport", methods=['post'])
 def viewReport():
-
+    username = session['username']
     cursor = conn.cursor()
+    query0 = 'SELECT airline_name FROM airline_staff WHERE username=%s'
+    cursor.execute(query0, username)
+    airline_ = cursor.fetchone()
+    airline = airline_['airline_name']
+
     last = request.form['last']
 
 
     if last == 'last_month':
-        query1 = 'SELECT COUNT(*) as num_tickets_sold FROM ticket WHERE date(purchase_date_time) > subdate(CURRENT_DATE, INTERVAL 1 MONTH)'
-        cursor.execute(query1)
+        query1 = 'SELECT COUNT(*) as num_tickets_sold FROM ticket WHERE airline_name=%s AND date(purchase_date_time) >\
+         subdate(CURRENT_DATE, INTERVAL 1 MONTH)'
+        cursor.execute(query1, airline)
         result = cursor.fetchone()
+        query4 = 'SELECT distinct MONTH(purchase_date_time) AS month FROM ticket WHERE airline_name=%s AND date(purchase_date_time) >\
+         subdate(CURRENT_DATE, INTERVAL 1 MONTH)'
+        cursor.execute(query4, airline)
+        data = cursor.fetchall()
+        months = []
+        for each in data:
+            months.append(each['month'])
+
+        nums = []
+        for i in months:
+            query5 = 'SELECT COUNT(*) AS num FROM ticket WHERE airline_name=%s AND MONTH(purchase_date_time) = %s'
+            cursor.execute(query5, (airline, i))
+            data2 = cursor.fetchone()
+            nums.append(data2)
     elif last == 'last_year':
-        query2 = 'SELECT COUNT(*) as num_tickets_sold FROM ticket WHERE date(purchase_date_time) > subdate(CURRENT_DATE, INTERVAL 1 YEAR)'
-        cursor.execute(query2)
+        query2 = 'SELECT COUNT(*) as num_tickets_sold FROM ticket WHERE airline_name=%s AND date(purchase_date_time) > subdate(CURRENT_DATE, INTERVAL 1 YEAR)'
+        cursor.execute(query2, airline)
         result = cursor.fetchone()
+        query4 = 'SELECT distinct MONTH(purchase_date_time) AS month FROM ticket WHERE airline_name=%s AND date(purchase_date_time) > subdate(CURRENT_DATE, INTERVAL 1 YEAR)'
+        cursor.execute(query4, airline)
+        data = cursor.fetchall()
+        months = []
+        for each in data:
+            months.append(each['month'])
+
+        nums = []
+        for i in months:
+            query5 = 'SELECT COUNT(*) AS num FROM ticket WHERE airline_name=%s AND MONTH(purchase_date_time) = %s'
+            cursor.execute(query5, (airline, i))
+            data2 = cursor.fetchone()
+            nums.append(data2)
+
     elif last == 'between':
         date1 = request.form['date1']
         date2 = request.form['date2']
-        query3 = 'SELECT COUNT(*) as num_tickets_sold FROM ticket WHERE date(purchase_date_time) BETWEEN %s AND %s'
-        cursor.execute(query3, (date1, date2))
+        query3 = 'SELECT COUNT(*) as num_tickets_sold FROM ticket WHERE airline_name= %s AND date(purchase_date_time) BETWEEN %s AND %s'
+        cursor.execute(query3, (airline, date1, date2))
         result = cursor.fetchone()
+        query4 = 'SELECT distinct MONTH(purchase_date_time) AS month FROM ticket WHERE airline_name=%s AND date(purchase_date_time) BETWEEN %s AND %s '
+        q = ''
+        cursor.execute(query4, (airline, date1, date2))
+        data = cursor.fetchall()
+        months = []
+        for each in data:
+            months.append(each['month'])
+
+        nums = []
+        for i in months:
+            query5 = 'SELECT COUNT(*) AS num FROM ticket WHERE airline_name=%s AND MONTH(purchase_date_time) = %s'
+            cursor.execute(query5, (airline, i))
+            data2 = cursor.fetchone()
+            nums.append(data2)
     else:
         return render_template('view_report_result.html', error='You must make a choice!')
 
     result_num = result['num_tickets_sold']
 
-    query4 = 'SELECT MONTH(purchase_date_time) AS month FROM ticket'
-    cursor.execute(query4)
-    data = cursor.fetchall()
-    months = []
-    for each in data:
-        months.append(each['month'])
 
-    nums = []
-    for i in months:
-        query5 = 'SELECT COUNT(*) AS num FROM ticket WHERE MONTH(purchase_date_time) = %s'
-        cursor.execute(query5, i)
-        data2 = cursor.fetchone()
-        nums.append(data2)
 
     cursor.close()
 
@@ -267,22 +302,27 @@ def view_top_des():
 
 @app.route("/viewDes", methods=['post'])
 def viewDes():
-
+    username = session['username']
     cursor = conn.cursor()
+    query0 = 'SELECT airline_name FROM airline_staff WHERE username=%s'
+    cursor.execute(query0, username)
+    airline_ = cursor.fetchone()
+    airline = airline_['airline_name']
+
     last = request.form['last']
 
     if last == 'last_three_month':
         query1 = 'SELECT airport.city AS city, arrival_airport_code AS des_code,  COUNT(ticket_id) AS num_ticket FROM ticket, \
-        flight, airport WHERE ticket.flight_number=flight.flight_number AND flight.arrival_airport_code=airport.airport_code \
+        flight, airport WHERE ticket.airline_name=%s AND ticket.flight_number=flight.flight_number AND flight.arrival_airport_code=airport.airport_code \
         AND date(purchase_date_time) > subdate(CURRENT_DATE, INTERVAL 3 MONTH) GROUP BY arrival_airport_code \
         ORDER BY num_ticket DESC LIMIT 3'
-        cursor.execute(query1)
+        cursor.execute(query1, airline)
         data = cursor.fetchall()
     elif last == 'last_year':
         query2 = 'SELECT airport.city AS city, arrival_airport_code AS des_code,  COUNT(ticket_id) AS num_ticket FROM ticket, flight, \
-        airport WHERE ticket.flight_number=flight.flight_number AND flight.arrival_airport_code=airport.airport_code AND \
+        airport WHERE ticket.airline_name=%s AND ticket.flight_number=flight.flight_number AND flight.arrival_airport_code=airport.airport_code AND \
         date(purchase_date_time) > subdate(CURRENT_DATE, INTERVAL 1 YEAR) GROUP BY arrival_airport_code ORDER BY num_ticket DESC LIMIT 3'
-        cursor.execute(query2)
+        cursor.execute(query2,airline)
         data = cursor.fetchall()
     else:
         return render_template('view_top_des.html', error="You must make a choice!")
@@ -295,47 +335,127 @@ def viewDes():
 
 @app.route('/view_revenue')
 def view_revenue():
+    username = session['username']
     cursor = conn.cursor()
-    query1 = 'SELECT SUM(sold_price) as total_revenue_m FROM ticket WHERE date(purchase_date_time) > subdate(CURRENT_DATE, INTERVAL 1 MONTH)'
-    query2 = 'SELECT SUM(sold_price) as total_revenue_y FROM ticket WHERE date(purchase_date_time) > subdate(CURRENT_DATE, INTERVAL 1 YEAR)'
-    cursor.execute(query1)
+    query0 = 'SELECT airline_name FROM airline_staff WHERE username=%s'
+    cursor.execute(query0, username)
+    airline_ = cursor.fetchone()
+    airline = airline_['airline_name']
+    query1 = 'SELECT SUM(sold_price) as total_revenue_m FROM ticket WHERE airline_name=%s AND date(purchase_date_time) > subdate(CURRENT_DATE, INTERVAL 1 MONTH)'
+    query2 = 'SELECT SUM(sold_price) as total_revenue_y FROM ticket WHERE airline_name=%s AND date(purchase_date_time) > subdate(CURRENT_DATE, INTERVAL 1 YEAR)'
+    cursor.execute(query1, airline)
     mdata = cursor.fetchone()
-    cursor.execute(query2)
+    cursor.execute(query2, airline)
     ydata = cursor.fetchone()
     cursor.close()
     return render_template('view_revenue.html', mdata=mdata, ydata=ydata)
 
 @app.route('/view_revenue_class')
 def view_revenue_class():
+    username = session['username']
     cursor = conn.cursor()
+    query0 = 'SELECT airline_name FROM airline_staff WHERE username=%s'
+    cursor.execute(query0, username)
+    airline_ = cursor.fetchone()
+    airline = airline_['airline_name']
     query11 = "SELECT (CASE WHEN SUM(sold_price) is not null THEN SUM(sold_price) ELSE 0 END) as total_revenue_m\
-     FROM ticket WHERE date(purchase_date_time) > subdate(CURRENT_DATE, INTERVAL 1 MONTH) AND travel_class = 'First Class'"
+     FROM ticket WHERE airline_name=%s AND date(purchase_date_time) > subdate(CURRENT_DATE, INTERVAL 1 MONTH) AND travel_class = 'First Class'"
     query12 = "SELECT (CASE WHEN SUM(sold_price) is not null THEN SUM(sold_price) ELSE 0 END) as total_revenue_m\
-     FROM ticket WHERE date(purchase_date_time) > subdate(CURRENT_DATE, INTERVAL 1 MONTH) AND travel_class = 'Business Class'"
+     FROM ticket WHERE airline_name=%s AND date(purchase_date_time) > subdate(CURRENT_DATE, INTERVAL 1 MONTH) AND travel_class = 'Business Class'"
     query13 = "SELECT (CASE WHEN SUM(sold_price) is not null THEN SUM(sold_price) ELSE 0 END) as total_revenue_m\
-     FROM ticket WHERE date(purchase_date_time) > subdate(CURRENT_DATE, INTERVAL 1 MONTH) AND travel_class = 'Economy Class'"
+     FROM ticket WHERE airline_name=%s AND date(purchase_date_time) > subdate(CURRENT_DATE, INTERVAL 1 MONTH) AND travel_class = 'Economy Class'"
     query21 =  "SELECT (CASE WHEN SUM(sold_price) is not null THEN SUM(sold_price) ELSE 0 END) as total_revenue_y\
-     FROM ticket WHERE date(purchase_date_time) > subdate(CURRENT_DATE, INTERVAL 1 YEAR) AND travel_class= 'First Class'"
+     FROM ticket WHERE airline_name=%s AND date(purchase_date_time) > subdate(CURRENT_DATE, INTERVAL 1 YEAR) AND travel_class= 'First Class'"
     query22 = "SELECT (CASE WHEN SUM(sold_price) is not null THEN SUM(sold_price) ELSE 0 END) as total_revenue_y\
-     FROM ticket WHERE date(purchase_date_time) > subdate(CURRENT_DATE, INTERVAL 1 YEAR) AND travel_class= 'Business Class'"
+     FROM ticket WHERE airline_name=%s AND date(purchase_date_time) > subdate(CURRENT_DATE, INTERVAL 1 YEAR) AND travel_class= 'Business Class'"
     query23 = "SELECT (CASE WHEN SUM(sold_price) is not null THEN SUM(sold_price) ELSE 0 END) as total_revenue_y\
-     FROM ticket WHERE date(purchase_date_time) > subdate(CURRENT_DATE, INTERVAL 1 YEAR) AND travel_class= 'Economy Class'"
-    cursor.execute(query11)
+     FROM ticket WHERE airline_name=%s AND date(purchase_date_time) > subdate(CURRENT_DATE, INTERVAL 1 YEAR) AND travel_class= 'Economy Class'"
+    cursor.execute(query11, airline)
     mdata1 = cursor.fetchone()
-    cursor.execute(query12)
+    cursor.execute(query12, airline)
     mdata2 = cursor.fetchone()
-    cursor.execute(query13)
+    cursor.execute(query13, airline)
     mdata3 = cursor.fetchone()
-    cursor.execute(query21)
+    cursor.execute(query21, airline)
     ydata1 = cursor.fetchone()
-    cursor.execute(query22)
+    cursor.execute(query22, airline)
     ydata2 = cursor.fetchone()
-    cursor.execute(query23)
+    cursor.execute(query23, airline)
     ydata3 = cursor.fetchone()
 
     cursor.close()
     return render_template('view_revenue_class.html', mdata1=mdata1, mdata2=mdata2, mdata3=mdata3,\
                            ydata1=ydata1, ydata2=ydata2, ydata3=ydata3)
+
+@app.route('/view_ratings')
+def view_ratings():
+    username = session['username']
+    cursor = conn.cursor()
+    query0 = 'SELECT airline_name FROM airline_staff WHERE username=%s'
+    cursor.execute(query0, username)
+    airline_ = cursor.fetchone()
+    airline = airline_['airline_name']
+
+    query = 'SELECT ratings.flight_number, AVG(rating) as average_rating FROM ratings, flight WHERE \
+    flight.flight_number=ratings.flight_number\
+     AND flight.airline_name=%s GROUP BY flight_number'
+    cursor.execute(query, airline)
+    data = cursor.fetchall()
+    cursor.close()
+    filtered_data = []
+    for elem in data:
+        filtered_data.append([elem['flight_number'], elem['average_rating']])
+    return render_template('view_ratings.html', ratings=filtered_data)
+
+
+@app.route('/viewRC', methods=['post'])
+def view_RC():
+    cursor = conn.cursor()
+    flight_num = request.form['flight_number']
+    query = 'SELECT flight_number, rating, comments, customer_email as customer FROM ratings WHERE flight_number=%s'
+    cursor.execute(query, flight_num)
+    data = cursor.fetchall()
+    cursor.close()
+    filtered_data = []
+    for elem in data:
+        filtered_data.append([elem['flight_number'], elem['rating'], elem['comments'], elem['customer']])
+    return render_template('view_ratings_by_flight.html', ratingcomment=filtered_data)
+
+@app.route('/view_frequent_customers')
+def view_frequent_customers():
+
+    username = session['username']
+    cursor = conn.cursor()
+    query0 = 'SELECT airline_name FROM airline_staff WHERE username=%s'
+    cursor.execute(query0, username)
+    airline_ = cursor.fetchone()
+    airline = airline_['airline_name']
+    query1 = 'SELECT DISTINCT customer_email FROM ticket WHERE airline_name=%s \
+    AND date(purchase_date_time) > subdate(CURRENT_DATE, INTERVAL 1 YEAR) group by customer_email \
+    ORDER BY COUNT(customer_email) DESC LIMIT 1'
+    cursor.execute(query1, airline)
+    fc_ = cursor.fetchone()
+    fc = fc_['customer_email']
+    cursor.close()
+    return render_template('view_frequent_customers.html', fc=fc)
+
+@app.route('/view_fc_list', methods=['post'])
+def view_fc_list():
+    username = session['username']
+    cursor = conn.cursor()
+    query0 = 'SELECT airline_name FROM airline_staff WHERE username=%s'
+    cursor.execute(query0, username)
+    airline_ = cursor.fetchone()
+    airline = airline_['airline_name']
+    customer = request.form['customer']
+    query1 = 'SELECT flight_number FROM ticket WHERE customer_email=%s AND airline_name=%s AND date(departure_date_time) < CURRENT_DATE'
+    cursor.execute(query1, (customer, airline))
+    data = cursor.fetchall()
+    fil_data = []
+    for elem in data:
+        fil_data.append(elem['flight_number'])
+    cursor.close()
+    return render_template('view_fc_list.html', fcl=fil_data)
 
 
 
@@ -495,7 +615,7 @@ def sregisterAuth():
 @app.route('/add_airline', methods=['GET','POST'])
 def add_airline():
     username = session['username']
-    cursor = conn.cursor();
+    cursor = conn.cursor()
     name = request.form['airlines']
     query = 'INSERT INTO airline (airline_name) VALUES (%s)'
     cursor.execute(query, (name))
