@@ -8,8 +8,10 @@
 
 <form action="/newFlight" method="post">
     <input type="number" name="flight_number" placeholder="Flight number"/><br>
-    <input type="radio" name="flight_status" value="Delayed"/> <p>Delayed</p><br>
-    <input type="radio" name="flight_status" value="On-time"/> <p>On-time</p><br>
+    <input type="radio" id="flight_stat_del" name="flight_status" value="Delayed"/>
+    <label for="flight_stat_del">Delayed</label>
+    <input type="radio" id="flight_stat_ont" name="flight_status" value="On-time"/> <p>On-time</p><br>
+    <label for="flight_stat_ont">On-time</label>
     <p>Departure date</p>
     <input type="datetime-local" name="departure_date" placeholder="Departure date and time"/><br>
     <p>Arrival date</p>

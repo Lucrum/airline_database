@@ -62,9 +62,9 @@ def getAllFutureFlights():
 
 def searchData(arg, username = None):
     cursor = conn.cursor()
-    if username:
+    if (username):
         query = 'SELECT * FROM flight WHERE airline_name = %s OR departure_airport_code = %s OR arrival_airport_code = %s ' \
-                'OR departure_date_time = %s OR arrival_date_time = %s AND ' \
+                'OR departure_date_time = %s OR arrival_date_time = %s AND flight_number ' \
                 'IN (SELECT flight_number FROM ticket WHERE customer_email = %s)'
         cursor.execute(query, (arg, arg, arg, arg, arg, username))
     else:
@@ -79,4 +79,107 @@ def searchData(arg, username = None):
         filtered_data.append([elem['airline_name'], elem['flight_number'],
                               elem['departure_date_time'][0:10], elem['arrival_date_time'][0:10]])
 
+    return filtered_data
+
+def search_source_airport(arg, username = None):
+    cursor = conn.cursor()
+
+    if (username):
+        query = 'SELECT * FROM flight WHERE departure_airport_code IN ' \
+                '(SELECT airport_code FROM airport WHERE ' \
+                'airport_name = %s OR city = %s OR country = %s OR ' \
+                'airport_code = %s) AND flight_number IN ' \
+                '(SELECT flight_number FROM ticket WHERE customer_email = %s)'
+        cursor.execute(query, (arg, arg, arg, arg, username))
+
+    else:
+        query = 'SELECT * FROM flight WHERE departure_airport_code IN ' \
+                '(SELECT airport_code FROM airport WHERE ' \
+                'airport_name = %s OR city = %s OR country = %s OR ' \
+                'airport_code = %s)'
+        cursor.execute(query, (arg, arg, arg, arg))
+
+    filtered_data = []
+    data = cursor.fetchall()
+    for elem in data:
+        filtered_data.append([elem['airline_name'], elem['flight_number'],
+                              elem['departure_date_time'][0:10], elem['arrival_date_time'][0:10]])
+
+    cursor.close()
+    return filtered_data
+
+
+
+
+def search_dest_airport(arg, username=None):
+    cursor = conn.cursor()
+
+    if (username):
+        query = 'SELECT * FROM flight WHERE arrival_airport_code IN ' \
+                '(SELECT airport_code FROM airport WHERE ' \
+                'airport_name = %s OR city = %s OR country = %s OR ' \
+                'airport_code = %s) AND flight_number IN ' \
+                '(SELECT flight_number FROM ticket WHERE customer_email = %s)'
+        cursor.execute(query, (arg, arg, arg, arg, username))
+
+    else:
+        query = 'SELECT * FROM flight WHERE arrival_airport_code IN ' \
+                '(SELECT airport_code FROM airport WHERE ' \
+                'airport_name = %s OR city = %s OR country = %s OR ' \
+                'airport_code = %s)'
+        cursor.execute(query, (arg, arg, arg, arg))
+
+    filtered_data = []
+    data = cursor.fetchall()
+    for elem in data:
+        filtered_data.append([elem['airline_name'], elem['flight_number'],
+                              elem['departure_date_time'][0:10], elem['arrival_date_time'][0:10]])
+
+    cursor.close()
+    return filtered_data
+
+
+def search_dept_date(arg, username=None):
+    cursor = conn.cursor()
+
+
+    if (username):
+        query = 'SELECT * FROM flight WHERE departure_date_time = %s' \
+                ' AND flight_number IN ' \
+                '(SELECT flight_number FROM ticket WHERE customer_email = %s)'
+        cursor.execute(query, (arg, username))
+
+    else:
+        query = 'SELECT * FROM flight WHERE departure_date_time = %s'
+        cursor.execute(query, (arg))
+
+    filtered_data = []
+    data = cursor.fetchall()
+    for elem in data:
+        filtered_data.append([elem['airline_name'], elem['flight_number'],
+                              elem['departure_date_time'][0:10], elem['arrival_date_time'][0:10]])
+
+    cursor.close()
+    return filtered_data
+
+def search_arriv_date(arg, username=None):
+    cursor = conn.cursor()
+
+    if (username):
+        query = 'SELECT * FROM flight WHERE arrival_date_time = %s' \
+                ' AND flight_number IN ' \
+                '(SELECT flight_number FROM ticket WHERE customer_email = %s)'
+        cursor.execute(query, (arg, username))
+
+    else:
+        query = 'SELECT * FROM flight WHERE arrival_date_time = %s'
+        cursor.execute(query, (arg))
+
+    filtered_data = []
+    data = cursor.fetchall()
+    for elem in data:
+        filtered_data.append([elem['airline_name'], elem['flight_number'],
+                              elem['departure_date_time'][0:10], elem['arrival_date_time'][0:10]])
+
+    cursor.close()
     return filtered_data

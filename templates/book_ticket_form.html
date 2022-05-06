@@ -7,7 +7,16 @@
     <script>
         var cost = {{ price }}
         function changeClass(selection) {
-            new_cost = cost * selection.value;
+            if (selection.id === "first") {
+                value = 3;
+            }
+            else if (selection.id === "business") {
+                value = 2;
+            }
+            else {
+                value = 1;
+            }
+            new_cost = cost * value;
             document.getElementById("price_header").textContent = '$' + (new_cost);
             document.getElementById("fincost").value = new_cost;
         }
@@ -23,9 +32,13 @@
 
 
 <form action="{{ url_for('buy_ticket', flight_number=flight_number) }}" method="post">
-    <input type="radio" name="class" value=3 onclick="changeClass(this);" required/>First Class<br>
-    <input type="radio" name="class" value=2 onclick="changeClass(this);" required/>Business Class<br>
-    <input type="radio" name="class" value=1 onclick="changeClass(this);" required checked="checked"/>Economy Class<br>
+    <input type="radio" id="first" name="class" value="First Class" onclick="changeClass(this);" required/>
+    <label for="first">First Class</label><br>
+    <input type="radio" id="business" name="class" value="Business Class" onclick="changeClass(this);" required/>
+    <label for="business">Business Class</label><br>
+    <input type="radio" id="economy" name="class" value="Economy Class" onclick="changeClass(this);" required checked="checked"/>
+    <label for="economy">Economy Class</label><br>
+
     <input type="hidden" name="final_cost" id="fincost" value="{{ price }}">
     <br>
 

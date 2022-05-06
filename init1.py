@@ -1,5 +1,6 @@
 
 import random
+from time import strftime
 
 import pymysql
 import werkzeug.exceptions
@@ -32,28 +33,36 @@ def landing():
     return render_template('landing_page.html', flights=filtered_data, err=no_search)
 
 
-@app.route('/psearch/<prev_page>', methods=['POST'])
-def psearch(prev_page):
-    cursor = conn.cursor()
+@app.route('/psearch', methods=['POST'])
+def psearch():
+    search_type = request.args.get('type')
+    prev_page = request.args.get('prev')
+    level = request.args.get('sec')
     search_tags = request.form['psearchf']
-    if search_tags:
-        query = 'SELECT * FROM flight WHERE airline_name = %s OR departure_airport_code = %s OR arrival_airport_code = %s ' \
-                'OR departure_date_time = %s OR arrival_date_time = %s'
-        cursor.execute(query, (search_tags, search_tags, search_tags, search_tags, search_tags))
-        data = cursor.fetchall()
 
-
-        filtered_data = []
-        for elem in data:
-            filtered_data.append([elem['airline_name'], elem['flight_number'],
-                                  elem['departure_date_time'][0:10], elem['arrival_date_time'][0:10]])
-
-
-        cursor.close()
-        return render_template(prev_page, field=search_tags, data=filtered_data)
+    if (level == "user"):
+        username = session['username']
     else:
-        filtered_data = search.getPublicData()
-        return render_template('landing_page.html', flights=filtered_data, err = True)
+        username = None
+
+
+    if (search_type == "source"):
+        print("searching for source", search_tags)
+        data = search.search_source_airport(search_tags, username)
+    elif (search_type == "dest"):
+        print("searching for dest", search_tags)
+        data = search.search_dest_airport(search_tags, username)
+
+    elif (search_type == "dates"):
+        recon = search_tags[0:10]
+        recon += " " + search_tags[11:] + ":00"
+        search_tags = recon
+        data = search.search_dept_date(search_tags, username)
+    else:
+        data = None
+
+    return render_template('psearch.html', field=search_tags, data=data, prev=prev_page)
+
 
 # HOMEPAGES
 
@@ -71,6 +80,8 @@ def chome():
     filtered_public_data = search.getPublicData()
 
 
+
+
     # customer's flight data
     query = 'SELECT * FROM flight WHERE flight_number IN ' \
             '(SELECT flight_number FROM ticket WHERE customer_email = %s)'
@@ -78,15 +89,20 @@ def chome():
 
     cursor.execute(query, username)
 
-    future_customer_flights = cursor.fetchall()
+    customer_flights = cursor.fetchall()
+
+
     filtered_customer_flights = []
+    filtered_future_customer_flights = []
+    customer_spending = []
+    total_spending = None
 
     query = 'SELECT * FROM ticket WHERE customer_email = %s'
     cursor.execute(query, username)
-    future_customer_tickets = cursor.fetchall()
+    customer_tickets = cursor.fetchall()
 
-    if (future_customer_tickets):
-        for ticket in future_customer_tickets:
+    if (customer_tickets):
+        for ticket in customer_tickets:
             to_append = [ticket['ticket_id'], ticket['flight_number']]
 
             today = datetime.today()
@@ -95,7 +111,7 @@ def chome():
 
             flight_status = "Unknown"
 
-            for flight in future_customer_flights:
+            for flight in customer_flights:
                 if (flight['flight_number'] == ticket['flight_number']):
                     flight_info += [flight['departure_airport_code'],
                                   flight['departure_date_time'][0:10],
@@ -120,9 +136,56 @@ def chome():
             filtered_customer_flights.append(to_append)
 
 
-    # spending data
+
+        # customer's future flights
+        query = 'SELECT * FROM flight WHERE flight_number IN ' \
+                '(SELECT flight_number FROM ticket WHERE customer_email = %s) ' \
+                'AND departure_date_time > DATE %s'
+
+        now = datetime.now()
+        dt_string = now.strftime("%Y/%m/%d")
+
+        cursor.execute(query, (username, dt_string))
+        cust_future_flights = cursor.fetchall()
 
 
+
+        if (cust_future_flights):
+            for flight in cust_future_flights:
+
+                to_append = []
+
+                rest = []
+
+                for ticket in customer_tickets:
+                    if (ticket['flight_number'] == flight['flight_number']):
+                        to_append.append(ticket['ticket_id'])
+
+                        rest = [ticket['airline_name'], ticket['travel_class'],
+                                "$"+str(ticket['sold_price'])]
+
+
+                to_append += [flight['flight_number'],
+                             flight['flight_status'],
+                             flight['departure_airport_code'],
+                             flight['departure_date_time'][0:10],
+                             flight['arrival_airport_code'],
+                             flight['arrival_date_time'][0:10]]
+                to_append += rest
+                filtered_future_customer_flights.append(to_append)
+
+        # customer spending
+        total_spending = 0
+
+        for ticket in customer_tickets:
+            to_append = [ticket['purchase_date_time'].strftime("%m/%d/%Y"),
+                         ticket['ticket_id'],
+                         ticket['flight_number'],
+                         "$"+str(ticket['sold_price']),
+                         ]
+            total_spending += ticket['sold_price']
+            customer_spending.append(to_append)
+        total_spending = "$" + str(total_spending)
 
 
     cursor.close()
@@ -140,7 +203,8 @@ def chome():
 
     return render_template('chome.html', username=name, public_flights=filtered_public_data,
                            cust_flights=filtered_customer_flights, fail_cancel=fail_to_cancel,
-                           cancel_success=cancel_success)
+                           cancel_success=cancel_success, future_flights=filtered_future_customer_flights,
+                           spending=customer_spending, spending_total=total_spending)
 
 @app.route('/shome')
 def shome():
@@ -215,6 +279,7 @@ def buy_ticket():
 
     purchase_date = datetime.now()
     dt_string = purchase_date.strftime("%Y/%m/%d %H:%M:%S")
+
 
 
     card = request.form['card_type']
@@ -419,8 +484,8 @@ def newFlight():
         return render_template('create_flight.html', error="Duplicate flight number")
     else:
         query = 'INSERT INTO flight VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)'
-        cursor.execute(query, (flight_no, flight_status, dept_date, airline,
-                               airplane, dept_code, arriv_code, arri_date, base_price))
+        cursor.execute(query, (flight_no, flight_status, dept_datetime, airline,
+                               airplane, dept_code, arriv_code, arri_datetime, base_price))
         conn.commit()
         cursor.close()
         return render_template('create_flight.html', success="Flight" + flight_no + "created!")
