@@ -1,9 +1,12 @@
 Team summary
 
 Elton Toh	(ET1746)
-Was responsible for search functionality and customer use cases
+Was responsible for search functionality and half of airline staff's use cases at first,
+When Avinesha didn't hand-in the work he was assigned, takes over all the customer use cases
 Flight booking, customer homepage, spending tracking
 
 Ruiqi Xue	(RX525)
+Was responsible for customer/staff login/register and half of airline staff's use cases at first,
+When Avinesha didn't hand-in the work he was assigned, takes over all the airline staff's use cases
 
 Avinesha Kumar	(AK9577)
