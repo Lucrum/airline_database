@@ -3,12 +3,12 @@ root
 -search.py			-search utilities
 
 templates
--add_new_airport.html		-new airport form
--add_plane.html			-new plane form
--add_plane_confirmation.html	-new plane confirmation form
+-add_new_airport.html		-add new airport form
+-add_plane.html			-add new plane form
+-add_plane_confirmation.html	-show all planes owned by his/her airline
 -book_ticket_form.html		-ticket booking form
 -change_status.html		-page to change the status of a flight
--chome.html			-customer homepage
+-chome.html			-customer's homepage
 -create_flight.html		-form for entering/creating a new flight
 -customerlogin.html		-customer login page
 -customerregister.html		-customer registration page/form
@@ -16,12 +16,16 @@ templates
 -landing_page.html		-default homepage
 -psearch.html			-search results when searching through flights
 -ratings.html			-page for customers to rate and comment their past flights
--shome.html			-staff homepage
+-shome.html			-staff's homepage
 -stafflogin.html		-staff login page
 -staffregister.html		-staff registration page
--view_report.html		-
--view_report_result.html	-
--view_revenue.html		-revenue page?
--view_revenue_class.html	-
--view_top_des.html		-
--view_top_des_result.html	-
+-view_report.html		- search boxes/radios for view report for range of dates/last year/last month
+-view_report_result.html	- show result for view_report.html, and present the table for month-wise sale
+-view_revenue.html		- show earned revenue(total amount in last month/year)
+-view_revenue_class.html	- link within view_revenue.html; show revenue by each travel class
+-view_top_des.html		- choose to show top 3 popular destinations for last 3 months & last year
+-view_top_des_result.html	- link within view_top_des.html; show the result for top 3 popular destinations for last 3 months & last year
+-view_frequent_customers.html - show the most frequent customer's email and search box of customer email for flights taken list
+-view_fc_list.html - show the list of flights taken by the customer whose email been searched
+-view_ratings.html - show each flights' average ratings and search box for flight number
+-view_ratings_by_flight.html - show all comments and ratings for the flight been searched 
