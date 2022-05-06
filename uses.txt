@@ -1,0 +1,202 @@
+Use cases and their queries
+
+
+Homepage/landing page -------------------------------------------
+
+- Table displaying all flights
+	- 'SELECT * FROM flight'
+	Retrieves all flights
+
+- Search by source city or airport
+If searching through a user's flights,
+	-'SELECT * FROM flight WHERE departure_airport_code IN 
+                (SELECT airport_code FROM airport WHERE 
+                airport_name = %s OR city = %s OR country = %s OR 
+                airport_code = %s) AND flight_number IN 
+                (SELECT flight_number FROM ticket WHERE customer_email = %s)'
+	Retrieves all flights that match either the given airport code,
+	name, city, or country during departure
+	Additionally filters them by the logged in customer
+
+Otherwise,
+	-'SELECT * FROM flight WHERE departure_airport_code IN 
+                (SELECT airport_code FROM airport WHERE
+                airport_name = %s OR city = %s OR country = %s OR
+                airport_code = %s)'
+	Retrieves all flights that match either the given airport code,
+	name, city, or country during departure
+
+- Search by destination city or airport
+If searching through a user's flights,
+	-'SELECT * FROM flight WHERE arrival_airport_code IN 
+                (SELECT airport_code FROM airport WHERE 
+                airport_name = %s OR city = %s OR country = %s OR 
+                airport_code = %s) AND flight_number IN 
+                (SELECT flight_number FROM ticket WHERE customer_email = %s)'
+	Retrieves all flights that match either the given airport code,
+	name, city, or country during arrival
+	Additionally filters them by the logged in customer
+
+Otherwise,
+	-'SELECT * FROM flight WHERE arrival_airport_code IN 
+                (SELECT airport_code FROM airport WHERE 
+                airport_name = %s OR city = %s OR country = %s OR 
+                airport_code = %s)'
+	Retrieves all flights that match either the given airport code,
+	name, city, or country during arrival
+
+- Search by departure date
+If searching through a user's flights,
+	-'SELECT * FROM flight WHERE departure_date_time = %s
+                AND flight_number IN 
+                (SELECT flight_number FROM ticket WHERE customer_email = %s)'
+	Retrieves all flights that match the given date during departure
+	Additionally filters them by the logged in customer
+
+Otherwise,
+	-'SELECT * FROM flight WHERE departure_date_time = %s'
+	Retrieves all flights that match the given date during departure
+
+- Search by return date
+If searching through a user's flights,
+	-'SELECT * FROM flight WHERE arrival_date_time = %s
+                AND flight_number IN 
+                (SELECT flight_number FROM ticket WHERE customer_email = %s)'
+	Retrieves all flights that match the given date during arrival
+	Additionally filters them by the logged in customer
+
+Otherwise,
+	-'SELECT * FROM flight WHERE arrival_date_time = %s'
+	Retrieves all flights that match the given date during arrival
+
+Customer login page -------------------------------------------
+
+login form
+	-'SELECT * FROM customer WHERE email = %s and md5(c_password) = %s'
+	Searches for a customer in the database with matching credentials
+
+Customer homepage -----------------------------------------------
+
+The following three tables have near identical searching functionality as described
+in the landing page. For brevity, the search functions will not be
+described again.
+
+- Table displaying all flights
+	- 'SELECT * FROM flight'
+	Retrieves all flights
+
+For the next two tables, their search functionality uses the alternate
+search, where it filters by the logged in customer
+
+- Table displaying customer's future flights
+	-'SELECT * FROM flight WHERE flight_number IN 
+                (SELECT flight_number FROM ticket WHERE customer_email = %s) 
+                AND departure_date_time > DATE %s'
+	Retrieves all flights where the customer has a ticket for them,
+	and the flight will depart some time in the future
+
+- Table displaying all of customer's flights
+	-'SELECT * FROM flight WHERE flight_number IN 
+            (SELECT flight_number FROM ticket WHERE customer_email = %s)'
+	Retrieves all flights where the customer has a ticket for them,
+	regardless of status
+
+- Table displaying customer spending
+	-'SELECT * FROM ticket WHERE customer_email = %s'
+	Retrieves the customer's tickets
+
+- Flight cancellation
+	-'SELECT departure_date_time FROM flight WHERE flight_number IN
+            (SELECT flight_number FROM ticket WHERE ticket_id = %s)'
+	Retrieves the departure date of the ticket being cancelled
+	This is to ensure tickets do not get cancelled 24H before
+	departure
+	
+	-'SELECT customer_email FROM ticket WHERE ticket_id = %s'
+	Retrieves email associated with the ticket, to ensure
+	the logged in customer is the owner
+
+	-'DELETE FROM ticket WHERE ticket_id = %s'
+	Deletes the ticket
+
+Flight listings ----------------------------------------------
+
+- Table showing all future flights that can be booked
+	-'SELECT * FROM flight WHERE departure_date_time > DATE %s'
+	Retrieves all flights that depart some time in the future
+
+Ticket buying form -------------------------------------------
+
+- Buying tickets
+	-'SELECT departure_date_time FROM flight WHERE flight_number = %s'
+	Gets the departure date of the flight
+
+	-'SELECT airline_name FROM flight WHERE flight_number = %s'
+	Gets the name of the airline operating the flight
+
+	-'SELECT ticket_id FROM ticket WHERE ticket_id = %s'
+	Checks if the new ticket's ID is already taken
+
+	-'INSERT INTO ticket VALUES(%s, %s, %s, %s, %s, %s,
+            %s, %s, %s, %s, %s)'
+	Creates the ticket using the ticket ID, username,
+	travel class, airline name, flight number,
+	departure date, price, purchase timestamp,
+	card type, name on card, and card expiration
+
+
+Ratings ------------------------------------------------------
+
+- Comment list
+	-'SELECT * FROM ratings WHERE flight_number = %s'
+	Retrieves all ratings for the associated flight
+
+- Post rating
+	-'SELECT * FROM ratings WHERE customer_email = %s'
+	Attempts to find pre-existing rating from the customer
+
+	-'INSERT INTO ratings VALUES (%s, %s, %s, %s)'
+	Commits the rating into the database, using the
+	flight number, username, rating, and comment
+
+- Delete rating
+	-'SELECT * FROM ratings WHERE customer_email = %s'
+	Attempts to find the customer's rating
+
+	-'DELETE FROM ratings WHERE customer_email = %s'
+	Deletes their rating
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
