@@ -3,8 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <title>Create New Flight</title>
+
+    <style>
+        table, th, td{
+		border: 1px solid black;
+	}
+    </style>
 </head>
 <body>
+
+{% if data %}
+
+        <table>
+            <th>Flight Number</th>
+            <th>Flight Status</th>
+            <th>Departure Date</th>
+            <th>Arrival Date</th>
+            <th>Airline</th>
+            <th>Departure Airport</th>
+            <th>Arrival Airport</th>
+            <th>Price</th>
+            {% for flight in data %}
+                <tr>
+                    {% for data in flight %}
+                        <td> {{ data }} </td>
+                    {% endfor %}
+                </tr>
+            {% endfor %}
+        </table>
+
+    {% else %}
+        <p>There are no available flights</p>
+    {% endif %}
 
 <form action="/newFlight" method="post">
     <input type="number" name="flight_number" placeholder="Flight number"/><br>
