@@ -744,6 +744,9 @@ def view_revenue():
     mdata = cursor.fetchone()
     cursor.execute(query2, airline)
     ydata = cursor.fetchone()
+
+    print(mdata)
+    print(ydata)
     cursor.close()
     return render_template('view_revenue.html', mdata=mdata, ydata=ydata)
 
@@ -832,7 +835,9 @@ def view_frequent_customers():
     ORDER BY COUNT(customer_email) DESC LIMIT 1'
     cursor.execute(query1, airline)
     fc_ = cursor.fetchone()
-    fc = fc_['customer_email']
+    print(fc_)
+    fc = fc_['username']
+
     cursor.close()
     return render_template('view_frequent_customers.html', fc=fc)
 

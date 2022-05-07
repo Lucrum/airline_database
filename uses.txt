@@ -165,38 +165,158 @@ Ratings ------------------------------------------------------
 
 	-'DELETE FROM ratings WHERE customer_email = %s'
 	Deletes their rating
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+	
+Airline Staff's use cases
+	
+1. View flights
+	-'SELECT * FROM flight'
+	Retrieves all flights
+	
+	
+2. Create new flights
+	- 'SELECT * FROM flight WHERE flight_number = %s'
+	First check if the flight is already existed in the flight table
+	
+	- 'INSERT INTO flight VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)'
+        cursor.execute(query2, (flight_no, flight_status, dept_datetime, airline,
+                               airplane, dept_code, arriv_code, arri_datetime, base_price))
+	If not existed, then insert the flight info into the flight table
+	
+3. Change status of flight
+	- 'SELECT * FROM flight WHERE flight_number = %s'
+	First check if the flight is already existed in the flight table
+	
+	If not, error, need to add this flight first
+	
+	If yes, - 'UPDATE flight SET flight_status  = %s WHERE flight_number = %s'
+	Update the status column in the flight table
+	
+4. Add airplane
+	- 'SELECT airline_name FROM airline'
+	First get the airline name
+	
+	- 'SELECT * FROM airplane WHERE airplane_id = %s'
+	Check if the airplane is already existed in the airplane table
+	
+	If not, - 'INSERT INTO airplane VALUES (%s, %s, %s, %s, %s)'
+	Insert the new plane info to airplane table
+	
+	- 'SELECT * FROM airplane WHERE airline_name = %s'
+	When filling out the form, get restricted to existed airline, otherwise need to add that airline first
+	
+5. Add new airport
+	- 'SELECT * FROM airport WHERE airport_code = %s'
+	First check if the airport is already existed in the airport table
+	
+	If not, 'INSERT INTO airport VALUES (%s, %s, %s, %s, %s)'
+	cursor.execute(query2, (airport_code, airport_name, country, city, type))
+	Insert all the new airport's info into airport table
+	
+6. View flight ratings
+	- 'SELECT airline_name FROM airline_staff WHERE username=%s'
+	First get the airline name that the staff works for 
+	
+	- 'SELECT ratings.flight_number, AVG(rating) as average_rating FROM ratings, flight WHERE \
+    flight.flight_number=ratings.flight_number\
+     AND flight.airline_name=%s GROUP BY flight_number'
+    	cursor.execute(query, airline)
+	Calcuate average ratings of flights operated by that airline
+	
+	-'SELECT flight_number, rating, comments, customer_email as customer FROM ratings WHERE flight_number=%s'
+    cursor.execute(query, flight_num)
+    	Get all the comments and ratings of a certain flight number searched by the user
+	
+7. View frequent customers
+	- 'SELECT airline_name FROM airline_staff WHERE username=%s'
+    cursor.execute(query0, username)
+    	First get the airline name that the staff works for 
+	
+	- 'SELECT DISTINCT customer_email FROM ticket WHERE airline_name=%s \
+    AND date(purchase_date_time) > subdate(CURRENT_DATE, INTERVAL 1 YEAR) group by customer_email \
+    ORDER BY COUNT(customer_email) DESC LIMIT 1'
+    cursor.execute(query1, airline)
+    	Get the most frequent customer's email from number of tickets purchased from ticket table
+	
+	- 'SELECT flight_number FROM ticket WHERE customer_email=%s AND airline_name=%s AND date(departure_date_time) < CURRENT_DATE'
+    cursor.execute(query1, (customer, airline))
+    	Get a list of flight numbers that a certain customer has taken within that airline by searching the customer's email
+	
+8. View report
+	- 'SELECT airline_name FROM airline_staff WHERE username=%s'
+	First get the airline name that the staff works for 
+	
+	Based on user's choice of time to check the report,
+	- If Last month:    
+        	- 'SELECT COUNT(*) as num_tickets_sold FROM ticket WHERE airline_name=%s AND date(purchase_date_time) >\
+         subdate(CURRENT_DATE, INTERVAL 1 MONTH)'
+        cursor.execute(query1, airline)
+		Get the number of tickets sold within one month
+		
+		- 'SELECT distinct MONTH(purchase_date_time) AS month FROM ticket WHERE airline_name=%s AND date(purchase_date_time) >\
+         subdate(CURRENT_DATE, INTERVAL 1 MONTH)'
+        cursor.execute(query4, airline)
+		Get month numbers for the month-wise report table 
+		
+		- 'SELECT COUNT(*) AS num FROM ticket WHERE airline_name=%s AND MONTH(purchase_date_time) = %s'
+            cursor.execute(query5, (airline, i))
+	     	Get number of tickets sold for each month in month-wise report table
+	
+	- If Last Year:
+		- 'SELECT COUNT(*) as num_tickets_sold FROM ticket WHERE airline_name=%s AND date(purchase_date_time) > subdate(CURRENT_DATE, INTERVAL 1 YEAR)'
+        cursor.execute(query2, airline)
+		
+		- 'SELECT distinct MONTH(purchase_date_time) AS month FROM ticket WHERE airline_name=%s AND date(purchase_date_time) > subdate(CURRENT_DATE, INTERVAL 1 YEAR)'
+        cursor.execute(query4, airline)
+		
+		- 'SELECT COUNT(*) AS num FROM ticket WHERE airline_name=%s AND MONTH(purchase_date_time) = %s'
+            cursor.execute(query5, (airline, i))
+	    
+	- If selected time of prriod by the user:
+		- 'SELECT COUNT(*) as num_tickets_sold FROM ticket WHERE airline_name= %s AND date(purchase_date_time) BETWEEN %s AND %s'
+        cursor.execute(query3, (airline, date1, date2))
+	
+		- 'SELECT distinct MONTH(purchase_date_time) AS month FROM ticket WHERE airline_name=%s AND date(purchase_date_time) BETWEEN %s AND %s '
+       	cursor.execute(query4, (airline, date1, date2))
+	
+		- 'SELECT COUNT(*) AS num FROM ticket WHERE airline_name=%s AND MONTH(purchase_date_time) = %s'
+            cursor.execute(query5, (airline, i))
+	   
+9. View Earned Revenue
+	- 'SELECT airline_name FROM airline_staff WHERE username=%s'
+	First get the airline name that the staff works for 
+	
+	- 'SELECT SUM(sold_price) as total_revenue_m FROM ticket WHERE airline_name=%s AND date(purchase_date_time) \
+    > subdate(CURRENT_DATE, INTERVAL 1 MONTH)'
+    	- 'SELECT SUM(sold_price) as total_revenue_y FROM ticket WHERE airline_name=%s AND date(purchase_date_time) \
+    > subdate(CURRENT_DATE, INTERVAL 1 YEAR)'
+	Get total amount of revenue earned from ticket sales in the last month and last year
+	
+10. View the revenue earned by each travel class
+	- "SELECT (CASE WHEN SUM(sold_price) is not null THEN SUM(sold_price) ELSE 0 END) as total_revenue_m\
+     FROM ticket WHERE airline_name=%s AND date(purchase_date_time) > subdate(CURRENT_DATE, INTERVAL 1 MONTH) AND travel_class = 'First Class'"
+    	- "SELECT (CASE WHEN SUM(sold_price) is not null THEN SUM(sold_price) ELSE 0 END) as total_revenue_m\
+     FROM ticket WHERE airline_name=%s AND date(purchase_date_time) > subdate(CURRENT_DATE, INTERVAL 1 MONTH) AND travel_class = 'Business Class'"
+   	- "SELECT (CASE WHEN SUM(sold_price) is not null THEN SUM(sold_price) ELSE 0 END) as total_revenue_m\
+    ticket WHERE airline_name=%s AND date(purchase_date_time) > subdate(CURRENT_DATE, INTERVAL 1 MONTH) AND travel_class = 'Economy Class'"
+    	- "SELECT (CASE WHEN SUM(sold_price) is not null THEN SUM(sold_price) ELSE 0 END) as total_revenue_y\
+     FROM ticket WHERE airline_name=%s AND date(purchase_date_time) > subdate(CURRENT_DATE, INTERVAL 1 YEAR) AND travel_class= 'First Class'"
+    	- "SELECT (CASE WHEN SUM(sold_price) is not null THEN SUM(sold_price) ELSE 0 END) as total_revenue_y\
+     FROM ticket WHERE airline_name=%s AND date(purchase_date_time) > subdate(CURRENT_DATE, INTERVAL 1 YEAR) AND travel_class= 'Business Class'"
+    	- "SELECT (CASE WHEN SUM(sold_price) is not null THEN SUM(sold_price) ELSE 0 END) as total_revenue_y\
+     FROM ticket WHERE airline_name=%s AND date(purchase_date_time) > subdate(CURRENT_DATE, INTERVAL 1 YEAR) AND travel_class= 'Economy Class'"
+     		Get the revenue earned by each travel class
+		
+11. View top destinations
+	- 'SELECT airline_name FROM airline_staff WHERE username=%s'
+	First get the airline name that the staff works for 
+	
+	- 'SELECT airport.city AS city, arrival_airport_code AS des_code,  COUNT(ticket_id) AS num_ticket FROM ticket, \
+        flight, airport WHERE ticket.airline_name=%s AND ticket.flight_number=flight.flight_number AND flight.arrival_airport_code=airport.airport_code \
+        AND date(purchase_date_time) > subdate(CURRENT_DATE, INTERVAL 3 MONTH) GROUP BY arrival_airport_code \
+        ORDER BY num_ticket DESC LIMIT 3'
+	Get the top 3 most visited destination (airport) with its city and number of tickets sold for the last 3 months
+	
+	- 'SELECT airport.city AS city, arrival_airport_code AS des_code,  COUNT(ticket_id) AS num_ticket FROM ticket, flight, \
+        airport WHERE ticket.airline_name=%s AND ticket.flight_number=flight.flight_number AND flight.arrival_airport_code=airport.airport_code AND \
+        date(purchase_date_time) > subdate(CURRENT_DATE, INTERVAL 1 YEAR) GROUP BY arrival_airport_code ORDER BY num_ticket DESC LIMIT 3'
+        Get the top 3 most visited destination (airport) with its city and number of tickets sold for the last year
