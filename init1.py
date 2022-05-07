@@ -332,6 +332,7 @@ def cancel_flight():
 
     now = datetime.now()
 
+
     departure_datetime = datetime.strptime(departure, '%Y-%m-%d %H:%M:%S')
 
     time_diff = departure_datetime - now
@@ -836,7 +837,7 @@ def view_frequent_customers():
     cursor.execute(query1, airline)
     fc_ = cursor.fetchone()
     print(fc_)
-    fc = fc_['username']
+    fc = fc_['customer_email']
 
     cursor.close()
     return render_template('view_frequent_customers.html', fc=fc)
@@ -962,7 +963,7 @@ def cregisterAuth():
     #cursor used to send queries
     cursor = conn.cursor()
     #executes query
-    query = 'SELECT * FROM user WHERE username = %s'
+    query = 'SELECT * FROM customer WHERE email = %s'
     cursor.execute(query, (email))
     #stores the results in a variable
     data = cursor.fetchone()
