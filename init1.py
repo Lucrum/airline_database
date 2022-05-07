@@ -10,6 +10,7 @@ import search
 import hashlib
 import datetime
 from datetime import datetime
+from datetime import date
 
 app = Flask(__name__)
 
@@ -70,6 +71,7 @@ def psearch():
 def chome():
     username = session['username']
     cursor = conn.cursor()
+
     query = 'SELECT * FROM customer WHERE email = %s'
     cursor.execute(query, username)
 
@@ -138,12 +140,12 @@ def chome():
 
 
         # customer's future flights
-        query = 'SELECT * FROM ticket WHERE departure_date_time > DATE %s'
+        query = 'SELECT * FROM ticket WHERE date(departure_date_time) > DATE %s AND customer_email = %s'
 
         now = datetime.now()
         dt_string = now.strftime("%Y/%m/%d")
 
-        cursor.execute(query, dt_string)
+        cursor.execute(query, (dt_string, username))
         cust_future_flights = cursor.fetchall()
 
         print("future flights", cust_future_flights)
@@ -266,9 +268,14 @@ def buy_ticket():
     price = request.form['final_cost']
 
     # get departure date
-    query = 'SELECT departure_date_time FROM flight WHERE flight_number = %s'
+    query = 'SELECT date(departure_date_time) FROM flight WHERE flight_number = %s'
     cursor.execute(query, flight_number)
-    departure = cursor.fetchone()['departure_date_time']
+
+    data = cursor.fetchone()
+
+    print(data)
+
+    departure = data['date(departure_date_time)']
 
     # get airline hosting the flight
     query = 'SELECT airline_name FROM flight WHERE flight_number = %s'
@@ -324,16 +331,22 @@ def cancel_flight():
 
     print("Attempting to cancel ticket " + ticket_id)
 
-    query = 'SELECT departure_date_time FROM flight WHERE flight_number IN' \
+    query = 'SELECT date(departure_date_time) FROM flight WHERE flight_number IN' \
             '(SELECT flight_number FROM ticket WHERE ticket_id = %s)'
     cursor.execute(query, ticket_id)
 
-    departure = cursor.fetchone()['departure_date_time']
-
-    now = datetime.now()
 
 
-    departure_datetime = datetime.strptime(departure, '%Y-%m-%d %H:%M:%S')
+    data = cursor.fetchone()
+
+    print(data)
+
+    departure = data['date(departure_date_time)']
+
+    now = date.today()
+    print(departure)
+
+    departure_datetime = departure
 
     time_diff = departure_datetime - now
     time_diff_hours = divmod(time_diff.total_seconds(), 3600)[0]

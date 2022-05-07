@@ -141,17 +141,18 @@ def search_dest_airport(arg, username=None):
 
 def search_dept_date(arg, username=None):
     cursor = conn.cursor()
+    print("dept", arg[0:10])
 
 
     if (username):
         query = 'SELECT * FROM flight WHERE departure_date_time = %s' \
                 ' AND flight_number IN ' \
                 '(SELECT flight_number FROM ticket WHERE customer_email = %s)'
-        cursor.execute(query, (arg, username))
+        cursor.execute(query, (arg[0:10], username))
 
     else:
         query = 'SELECT * FROM flight WHERE departure_date_time = %s'
-        cursor.execute(query, (arg))
+        cursor.execute(query, (arg[0:10]))
 
     filtered_data = []
     data = cursor.fetchall()
@@ -165,15 +166,16 @@ def search_dept_date(arg, username=None):
 def search_arriv_date(arg, username=None):
     cursor = conn.cursor()
 
+
     if (username):
         query = 'SELECT * FROM flight WHERE arrival_date_time = %s' \
                 ' AND flight_number IN ' \
                 '(SELECT flight_number FROM ticket WHERE customer_email = %s)'
-        cursor.execute(query, (arg, username))
+        cursor.execute(query, (arg[0:10], username))
 
     else:
         query = 'SELECT * FROM flight WHERE arrival_date_time = %s'
-        cursor.execute(query, (arg))
+        cursor.execute(query, (arg[0:10]))
 
     filtered_data = []
     data = cursor.fetchall()
